@@ -1,0 +1,23 @@
+# macOS / editores
+.DS_Store
+.vscode/
+.idea/
+
+# Dados do usuário (configuração, token de pareamento, imagens enviadas, plugins instalados): NUNCA versionar
+data/
+node/plugins/
+*.pem
+.env
+*.secret
+
+# Dependências e builds (regeneráveis)
+node_modules/
+.pio/
+app/dist/
+app/server/
+node/out/
+
+# Dumps de flash da placa: o NVS guarda a senha do Wi-Fi
+backup/
+*.bin
+!include/*.bin

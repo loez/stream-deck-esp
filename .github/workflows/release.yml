@@ -1,0 +1,43 @@
+# Publicação do Stream Deck ESP: gera os pacotes (Mac Apple Silicon e Intel, Windows, Linux) e cria a Release no GitHub.
+# Dispara ao empurrar uma tag `v*` (ex.: git tag v1.0.0 && git push origin v1.0.0) ou manualmente (Actions > release > Run workflow).
+# macOS sem conta da Apple: o app vai com assinatura ad hoc (sem notarização); veja docs/INSTALAR.md.
+name: release
+on:
+  push: { tags: ['v*'] }
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  pacotes:
+    strategy:
+      fail-fast: false
+      matrix: { os: [macos-latest, macos-15-intel, windows-latest, ubuntu-latest] }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: npm ci --no-audit --no-fund
+        working-directory: node
+      - run: npm ci --no-audit --no-fund
+        working-directory: app
+      - run: npm run release
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pacote-${{ matrix.os }}
+          path: |
+            app/dist/*.dmg
+            app/dist/*.zip
+            app/dist/*.tar.gz
+          retention-days: 14
+  publicar:
+    needs: pacotes
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { pattern: pacote-*, path: pacotes, merge-multiple: true }
+      - env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release create "${{ github.ref_name }}" pacotes/* --repo "${{ github.repository }}" --title "Stream Deck ESP ${{ github.ref_name }}" \
+            --notes "Mac: veja docs/INSTALAR.md (app sem assinatura da Apple: um comando libera). Windows: extraia o zip e abra Stream Deck ESP.exe. Linux: extraia o tar.gz."

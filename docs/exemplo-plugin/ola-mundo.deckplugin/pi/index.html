@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Olá Mundo</title>
+<style>body{font:13px system-ui;background:#1b1b20;color:#eee;margin:0;padding:12px}label{display:block;margin:10px 0 4px}input,select{width:100%;padding:6px;background:#2a2a31;color:#eee;border:1px solid #444;border-radius:6px;box-sizing:border-box}button{margin-top:12px;padding:7px 14px}</style></head>
+<body>
+<label>Título</label><input id="titulo" placeholder="Toques">
+<label>Cor do ícone</label><select id="cor"><option value="azul">Azul</option><option value="verde">Verde</option><option value="vermelho">Vermelho</option></select>
+<button id="salvar">Salvar</button> <span id="ok"></span>
+<script src="/deck-ui.js"></script>   <!-- SDK da tela de configuração: servido pelo app -->
+<script>
+const ui = new DeckUI();                                   // lê port/address/id da URL e conecta
+ui.onSettings((s) => { titulo.value = s.titulo || ''; cor.value = s.cor || 'azul'; });   // configuração atual do botão (e sempre que mudar)
+salvar.onclick = () => { ui.save({ titulo: titulo.value, cor: cor.value }); ok.textContent = 'Salvo ✓'; setTimeout(() => ok.textContent = '', 1500); };
+</script></body></html>

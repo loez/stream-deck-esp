@@ -1,0 +1,16 @@
+{
+  "id": "com.exemplo.olamundo",
+  "name": "Olá Mundo",
+  "version": "1.0.0",
+  "author": "Você",
+  "description": "Plugin de exemplo: um contador que mostra um ícone colorido e o número de toques.",
+  "main": "plugin/app.js",
+  "actions": [
+    {
+      "id": "com.exemplo.olamundo.contador",
+      "name": "Contador",
+      "tooltip": "Conta quantas vezes o botão foi tocado",
+      "ui": "pi/index.html"
+    }
+  ]
+}

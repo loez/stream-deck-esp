@@ -1,0 +1,49 @@
+{
+  "name": "streamdeck-node-proto",
+  "private": true,
+  "type": "module",
+  "description": "Servidor do Stream Deck em TypeScript (Node 22, roda .ts direto). Mesmo contrato HTTP do servidor Python (mac/): a placa não muda.",
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc",
+    "test:plugins": "node test/plugins.ts",
+    "test:sdk": "node test/sdk.ts",
+    "test:deck": "node test/deck-plugins.ts",
+    "test:i18n": "node test/i18n.ts",
+    "test": "node test/plugins.ts && node test/sdk.ts && node test/deck-plugins.ts && node test/i18n.ts && node test/focus.ts && node test/settings.ts && node test/env.ts && node test/stride.ts && node test/tiles.ts && node test/anim.ts && node test/platform.ts && node test/usb.ts && node test/plugin-install.ts && node test/slider.ts && node test/netactions.ts && node test/widgets.ts && node test/standalone.ts && node test/backup.ts && node test/nowplaying.ts && node test/state.ts && node test/hold.ts",
+    "test:settings": "node test/settings.ts",
+    "test:stride": "node test/stride.ts",
+    "test:tiles": "node test/tiles.ts",
+    "test:anim": "node test/anim.ts",
+    "test:focus": "node test/focus.ts",
+    "test:platform": "node test/platform.ts",
+    "test:usb": "node test/usb.ts",
+    "test:install": "node test/plugin-install.ts",
+    "test:slider": "node test/slider.ts",
+    "test:netactions": "node test/netactions.ts",
+    "test:widgets": "node test/widgets.ts",
+    "test:standalone": "node test/standalone.ts",
+    "test:backup": "node test/backup.ts",
+    "test:nowplaying": "node test/nowplaying.ts",
+    "test:state": "node test/state.ts",
+    "test:hold": "node test/hold.ts",
+    "test:linux-media": "bash test/linux/rodar-docker.sh",
+    "test:ci": "node --env-file=test/darwin.env test/plugins.ts && node test/sdk.ts && node test/deck-plugins.ts && node test/i18n.ts && node --env-file=test/darwin.env test/focus.ts && node --env-file=test/darwin.env test/settings.ts && node --env-file=test/darwin.env test/env.ts && node --env-file=test/darwin.env test/stride.ts && node --env-file=test/darwin.env test/tiles.ts && node --env-file=test/darwin.env test/anim.ts && node test/platform.ts && node test/usb.ts && node test/plugin-install.ts && node test/slider.ts && node test/netactions.ts && node test/widgets.ts && node test/standalone.ts && node test/backup.ts && node test/nowplaying.ts && node test/state.ts && node test/hold.ts"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.2.0",
+    "bonjour-service": "^1.4.4",
+    "omggif": "^1.0.10",
+    "opentype.js": "^2.0.0",
+    "pngjs": "^7.0.0",
+    "serialport": "^13.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/opentype.js": "^1.3.10",
+    "@types/pngjs": "^6.0.5",
+    "@types/ws": "^8.18.2",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "id": "com.luiz.ulanzistudio.bateriaesp",
+  "name": "Bateria da Placa",
+  "version": "1.1.0",
+  "author": "Luiz",
+  "description": "Bateria (%) da placa ESP32-S3 e controle da tela: brilho +/-, apagar (volta com o toque) e desligar a placa (volta com o RESET).",
+  "main": "plugin/app.js",
+  "actions": [
+    {
+      "id": "com.luiz.ulanzistudio.bateriaesp.nivel",
+      "name": "Nível da bateria",
+      "tooltip": "Mostra a % da bateria da placa; tocar atualiza na hora",
+      "icon": "resources/icon.png",
+      "states": [
+        {
+          "name": "Padrão",
+          "image": "resources/icon.png"
+        }
+      ]
+    },
+    {
+      "id": "com.luiz.ulanzistudio.bateriaesp.brilhomais",
+      "name": "Brilho +",
+      "tooltip": "Aumenta o brilho da tela da placa",
+      "icon": "resources/icon.png",
+      "states": [
+        {
+          "name": "Padrão",
+          "image": "resources/icon.png"
+        }
+      ]
+    },
+    {
+      "id": "com.luiz.ulanzistudio.bateriaesp.brilhomenos",
+      "name": "Brilho -",
+      "tooltip": "Diminui o brilho da tela da placa",
+      "icon": "resources/icon.png",
+      "states": [
+        {
+          "name": "Padrão",
+          "image": "resources/icon.png"
+        }
+      ]
+    },
+    {
+      "id": "com.luiz.ulanzistudio.bateriaesp.desligar",
+      "name": "Desligar placa",
+      "tooltip": "Desliga a placa ESP32 (deep sleep); para ligar de novo, aperte o botão RESET dela",
+      "icon": "resources/icon.png",
+      "states": [
+        {
+          "name": "Padrão",
+          "image": "resources/icon.png"
+        }
+      ]
+    },
+    {
+      "id": "com.luiz.ulanzistudio.bateriaesp.apagar",
+      "name": "Apagar tela",
+      "tooltip": "Apaga a tela da placa; qualquer toque acende de novo",
+      "icon": "resources/icon.png",
+      "states": [
+        {
+          "name": "Padrão",
+          "image": "resources/icon.png"
+        }
+      ]
+    }
+  ],
+  "locales": {
+    "en": {
+      "Bateria da Placa": "Board Battery",
+      "Bateria (%) da placa ESP32-S3 e controle da tela: brilho +/-, apagar (volta com o toque) e desligar a placa (volta com o RESET).": "Battery level (%) of the ESP32-S3 board and screen control: brightness +/-, blank the screen (a touch wakes it) and power the board off (RESET turns it back on).",
+      "Nível da bateria": "Battery level",
+      "Mostra a % da bateria da placa; tocar atualiza na hora": "Shows the board's battery %; tap to refresh right away",
+      "Brilho +": "Brightness +",
+      "Aumenta o brilho da tela da placa": "Raises the board screen brightness",
+      "Brilho -": "Brightness -",
+      "Diminui o brilho da tela da placa": "Lowers the board screen brightness",
+      "Desligar placa": "Power off board",
+      "Desliga a placa ESP32 (deep sleep); para ligar de novo, aperte o botão RESET dela": "Powers the ESP32 board off (deep sleep); press its RESET button to turn it back on",
+      "Apagar tela": "Blank screen",
+      "Apaga a tela da placa; qualquer toque acende de novo": "Turns the board screen off; any touch turns it back on"
+    }
+  }
+}

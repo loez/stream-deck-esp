@@ -1,0 +1,70 @@
+# Stream Deck ESP: testes do servidor, validação de mídia (Linux/Windows), compilação do firmware e empacotamento do app em macOS, Windows e Linux.
+name: ci
+on:
+  push: { paths: ['node/**', 'app/**', 'src/**', 'include/**', 'platformio.ini', '.github/workflows/ci.yml'] }
+  pull_request: { paths: ['node/**', 'app/**', 'src/**', 'include/**', 'platformio.ini', '.github/workflows/ci.yml'] }
+jobs:
+  servidor:
+    strategy:
+      fail-fast: false
+      matrix: { os: [macos-latest, windows-latest, ubuntu-latest] }
+    runs-on: ${{ matrix.os }}
+    defaults: { run: { working-directory: node } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: node/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run test:ci   # parity/resample ficam de fora: precisam do servidor Python e do Pillow, só existem na máquina de desenvolvimento
+  firmware:   # compila o firmware da ES3C28P (PlatformIO)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/cache@v4
+        with: { path: '~/.platformio', key: pio-${{ hashFiles('platformio.ini') }} }
+      - run: pip install platformio
+      - run: pio run
+  linux-midia:   # validação REAL no Linux: PulseAudio virtual + player MPRIS falso (volume, mudo, play/pausa, próxima, anterior, "Tocando agora")
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: node } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: node/package-lock.json }
+      - run: sudo apt-get update && sudo apt-get install -y pulseaudio pulseaudio-utils playerctl dbus xdotool python3-venv
+      - run: python3 -m venv /tmp/v && /tmp/v/bin/pip install dbus-next
+      - run: npm ci --no-audit --no-fund
+      - run: PYBIN=/tmp/v/bin/python dbus-run-session -- bash test/linux/executar.sh
+  windows-midia:   # PowerShell real: as teclas de mídia são aceitas (o efeito não dá para medir no runner)
+    runs-on: windows-latest
+    defaults: { run: { working-directory: node } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: node/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - run: node test/windows-media.ts
+  app:
+    needs: servidor
+    strategy:
+      fail-fast: false
+      matrix: { os: [macos-latest, windows-latest, ubuntu-latest] }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: npm ci --no-audit --no-fund
+        working-directory: node
+      - run: npm ci --no-audit --no-fund
+        working-directory: app
+      - run: npm run dist   # empacota para o sistema do runner (os módulos nativos são do sistema que instalou o npm)
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stream-deck-esp-${{ matrix.os }}
+          path: app/dist/*
+          retention-days: 7
