@@ -1,7 +1,7 @@
 {
   "name": "streamdeck-app",
   "productName": "Stream Deck ESP",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Stream Deck de toque (ES32S3) - app de barra de menu com o servidor e a página de configuração",
   "private": true,
   "type": "module",
