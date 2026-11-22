@@ -21,3 +21,7 @@ node/out/
 backup/
 *.bin
 !include/*.bin
+
+# Arquivos de trabalho locais (memória do assistente e instruções): nunca versionar
+memoria/
+CLAUDE.md
