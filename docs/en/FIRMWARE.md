@@ -13,7 +13,7 @@ Every Release includes the **ES3C28P** firmware, built by GitHub CI (reproducibl
 > Only for the **ES3C28P** (ESP32-S3, 16 MB flash). For another board see [ADAPT-BOARD.md](ADAPT-BOARD.md) and build with PlatformIO.
 
 ## Before flashing
-1. **Back up the factory firmware** (see [hardware/ES3C28P.md](../hardware/ES3C28P.md), Portuguese): `esptool.py --port <port> read_flash 0 0x1000000 backup_factory.bin`. Keep it **outside the repository**: it contains your Wi-Fi password.
+1. **Back up the factory firmware** (see [hardware/ES3C28P.md](hardware/ES3C28P.md)): `esptool.py --port <port> read_flash 0 0x1000000 backup_factory.bin`. Keep it **outside the repository**: it contains your Wi-Fi password.
 2. Install esptool: `python3 -m pip install --user esptool`.
 3. Find the port with the board plugged in over USB: macOS `ls /dev/cu.usbmodem*`; Linux `/dev/ttyACM0`; Windows `COMx` (Device Manager). The number changes when you replug the cable.
 4. If the Stream Deck app is open with the cable connection enabled, turn that off (Settings) or close the app: the port must be free.

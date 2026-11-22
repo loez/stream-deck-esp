@@ -31,7 +31,7 @@ The board finds the app by mDNS (`_streamdeck._tcp`), downloads button images, a
 
 ## Quick start
 1. **App:** download the package for your system from the Releases page (macOS `.dmg`, Windows `.zip`, Linux `.tar.gz`; see [docs/en/INSTALL.md](docs/en/INSTALL.md) for the unsigned-app steps). Or run from source: `cd node && npm ci && npm start`, then open <http://localhost:8765>.
-2. **Firmware:** flash the prebuilt binary from the Release with `esptool` ([docs/en/FIRMWARE.md](docs/en/FIRMWARE.md)) or build it yourself: `pip install platformio`, then with the board plugged in `pio run -t upload`. (Back up the factory firmware first: [docs/hardware/ES3C28P.md](docs/hardware/ES3C28P.md).)
+2. **Firmware:** flash the prebuilt binary from the Release with `esptool` ([docs/en/FIRMWARE.md](docs/en/FIRMWARE.md)) or build it yourself: `pip install platformio`, then with the board plugged in `pio run -t upload`. (Back up the factory firmware first: [docs/en/hardware/ES3C28P.md](docs/en/hardware/ES3C28P.md).)
 3. **Wi-Fi:** on first boot the board opens its own Wi-Fi portal to pick your network.
 4. **Pair:** in the app, click **Parear placa** (pair board) and the board gets its access token. Done — configure buttons in the page.
 
@@ -51,8 +51,8 @@ CI (GitHub Actions) runs the server tests on macOS/Windows/Linux, a real PulseAu
 Details and a manual Windows test script: [docs/en/PLATFORMS.md](docs/en/PLATFORMS.md).
 
 ## Documentation
-- **English:** [Install](docs/en/INSTALL.md) · [Flash the firmware](docs/en/FIRMWARE.md) · [Platforms](docs/en/PLATFORMS.md) · [Adapt to another board](docs/en/ADAPT-BOARD.md)
-- **Portuguese only for now** *(translations welcome)*: [Standalone mode](docs/MODO-AUTONOMO.md) · [USB protocol](docs/PROTOCOLO-USB.md) · [Sliders](docs/CONTROLES-DESLIZANTES.md) · [Create a plugin](docs/CRIAR-PLUGIN.md) · [Plugin protocol](docs/PROTOCOLO-PLUGIN.md) · [Translations](docs/TRADUCAO.md) · [New-board test battery](docs/NOVA-PLACA.md) · [Hardware notes](docs/hardware/)
+[Install](docs/en/INSTALL.md) · [Flash the firmware](docs/en/FIRMWARE.md) · [Platforms](docs/en/PLATFORMS.md) · [Standalone mode](docs/en/STANDALONE-MODE.md) · [USB protocol](docs/en/USB-PROTOCOL.md) · [Sliders](docs/en/SLIDERS.md) · [Create a plugin](docs/en/CREATE-PLUGIN.md) · [Plugin protocol](docs/en/PLUGIN-PROTOCOL.md) · [Translations](docs/en/TRANSLATION.md) · [Adapt to another board](docs/en/ADAPT-BOARD.md) · [New-board test battery](docs/en/NEW-BOARD-TESTS.md) · Hardware notes: [ES3C28P](docs/en/hardware/ES3C28P.md), [RAM](docs/en/hardware/MEMORY-RAM.md), [cores](docs/en/hardware/MULTICORE.md), [LVGL](docs/en/hardware/LVGL-PERFORMANCE.md). The code READMEs: [node/](node/README.en.md), [app/](app/README.en.md).
+Every document is also available in Portuguese (the `docs/` root).
 
 ## Security model
 The server listens on all interfaces so the board can reach it, but the configuration page and settings accept **localhost only**; the board authenticates with a token obtained in a 90-second pairing window. Do not expose port 8765 outside your LAN. **Plugins run code with your user's permissions** — install only plugins you trust. Standalone mode stores webhook/Home Assistant/MQTT secrets in the board's flash in clear text; never publish a flash dump. See [SECURITY.md](SECURITY.md).

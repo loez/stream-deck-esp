@@ -1,5 +1,7 @@
 # node/: servidor e página de configuração
 
+*[English](README.en.md)*
+
 Servidor do Stream Deck ESP em TypeScript (Node 22+ roda `.ts` direto, sem etapa de build; `npm run typecheck` confere os tipos).
 Serve a página de configuração (`web/`), entrega à placa a configuração e as imagens e executa as ações quando a placa avisa um toque.
 

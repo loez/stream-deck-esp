@@ -1,4 +1,6 @@
-# Uso dos 2 núcleos do ESP32-S3 (pesquisa de 2026-11-20)
+# Uso dos 2 núcleos do ESP32-S3 (pesquisa)
+
+*[English](../en/hardware/MULTICORE.md)*
 
 ESP32-S3 = 2 núcleos Xtensa LX7 a 240 MHz: Core 0 = PRO_CPU, Core 1 = APP_CPU. FreeRTOS em modo SMP (IDF).
 

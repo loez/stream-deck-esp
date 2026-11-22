@@ -1,5 +1,7 @@
 # Controles deslizantes (sliders) nos botões
 
+*[English](en/SLIDERS.md)*
+
 Um botão do tipo **Controle deslizante** (grupo "Controle deslizante" da biblioteca, ou o tipo na lista do botão) é arrastado com o dedo na placa. Funciona melhor em um botão **juntado** largo (3x1) ou alto (1x3): `Shift+clique` nas células para juntar.
 Código: `node/src/slider.ts` (lógica), `render.ts` (`sliderCanvas`), `server.ts` (`POST /api/slide`, campo `sl` do `/api/deck`), `src/main.cpp` (`slEvent`/`slApply`, desenho local). Teste: `node/test/slider.ts`.
 

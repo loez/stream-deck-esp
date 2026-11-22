@@ -1,5 +1,7 @@
 # Modo autônomo da placa (sem o app/PC)
 
+*[English](en/STANDALONE-MODE.md)*
+
 Quando o app (ou o computador) some, a placa **assume sozinha** um modo autônomo via Wi-Fi: **relógio de mesa** (hora grande, data e clima) e, ao tocar, uma **grade de botões de casa inteligente** que ela mesma executa (webhook HTTP/HTTPS, Home Assistant, MQTT).
 Quando o servidor volta (Wi-Fi ou cabo USB), ela retorna ao modo normal sozinha.
 
@@ -36,14 +38,14 @@ Numa task própria (pilha de 16 KB na PSRAM), uma por vez; o resultado vira a bo
 - **Webhook:** método, corpo, tipo do conteúdo e cabeçalhos (`Nome: valor` por linha); segue redirecionamentos; sucesso = HTTP 2xx. HTTPS ok.
 - **Home Assistant:** `POST {url}/api/services/{domínio}/{serviço}` com `Authorization: Bearer <token>` e corpo `{entity_id, ...dados}`.
 - **MQTT:** CONNECT/PUBLISH (QoS 0)/DISCONNECT à mão (MQTT 3.1.1), usuário/senha opcionais, TLS opcional, `retain`.
-- **TLS:** as alocações do mbedtls vão para a **PSRAM** (`-Wl,--wrap=esp_mbedtls_mem_calloc` em `platformio.ini` + `__wrap_esp_mbedtls_mem_calloc` em `main.cpp`, copiado do `radio-web`). Domínio público: valida **cadeia e nome** com o bundle de raízes do framework; **IP ou `*.local`**: não valida (servidor local autoassinado). **Limitação conhecida** (mbedtls do pioarduino sem `CONFIG_MBEDTLS_HAVE_TIME_DATE`): a **data de validade** do certificado não é conferida.
+- **TLS:** as alocações do mbedtls vão para a **PSRAM** (`-Wl,--wrap=esp_mbedtls_mem_calloc` em `platformio.ini` + `__wrap_esp_mbedtls_mem_calloc` em `main.cpp`). Domínio público: valida **cadeia e nome** com o bundle de raízes do framework; **IP ou `*.local`**: não valida (servidor local autoassinado). **Limitação conhecida** (mbedtls do pioarduino sem `CONFIG_MBEDTLS_HAVE_TIME_DATE`): a **data de validade** do certificado não é conferida.
 
 ## Segredos
 Tokens do Home Assistant e usuário/senha do MQTT ficam **na flash da placa** (`/sa/profile.json`, em claro) enquanto o modo autônomo estiver ligado. Um backup completo da flash passa a conter esses segredos (como já contém a senha do Wi-Fi): **não compartilhe nem commite backups**.
 Não vão para logs. Para apagar: desligue o modo autônomo no app (a placa apaga ao próximo contato) ou envie `X` pela serial.
 
 ## Bancada e testes
-- `python3 tools/mock_services.py`: webhook/Home Assistant/MQTT simulados que imprimem cada pedido (token do HA de teste: `teste-1234`); serve para provar que **a placa** (e não o servidor) executou com o app fechado. O `ha-painel/tools/mock_ha.py` também serve para o HA.
+- `python3 tools/mock_services.py`: webhook/Home Assistant/MQTT simulados que imprimem cada pedido (token do HA de teste: `teste-1234`); serve para provar que **a placa** (e não o servidor) executou com o app fechado.
 - Node: `npm run test:netactions` (25), `test:widgets` (18), `test:standalone` (26), `test:i18n`; entram em `npm test`/`test:ci`.
 - Firmware: compila com `pio run -e es3c28p`. Validação na placa: seção abaixo.
 

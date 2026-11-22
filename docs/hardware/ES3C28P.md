@@ -1,5 +1,7 @@
 # Placa ES3C28P (LCDWiki / Fikra "Preta"): análise de hardware
 
+*[English](../en/hardware/ES3C28P.md)*
+
 ## Fatos medidos (via esptool, somente leitura)
 - Chip: ESP32-S3 (QFN56), revisão v0.2, WiFi + BLE, cristal 40 MHz
 - PSRAM embutida: 8 MB (eFuse: AP_3v3, 85C)
@@ -18,19 +20,11 @@
 | spiffs | data/littlefs | 0xc90000 | 3456 KB |
 | coredump | data/coredump | 0xff0000 | 64 KB |
 
-## Firmware gravado
-- Arduino-ESP32 com IDF v5.5.5 (build 16 Set 2026), definição de placa "ESP32-S3-DevKitC-1-N8 (8 MB QD, No PSRAM)"
-  (a placa real tem 16 MB de flash e 8 MB de PSRAM: ajustar a config de placa nos projetos novos).
-- app0 é um cliente de tela remota: conecta ao Wi-Fi salvo na NVS, baixa quadros de
-  `http://192.168.31.237:8099/frame.raw?h=...` e envia toque via `/tap?x=&y=` e `/scroll?dy=`.
-  Imprime o IP ao iniciar (visto 192.168.31.19). Se não há Wi-Fi salvo, mostra "use o firmware original".
-- Existe uma fila de toque ("[touch] fila cheia").
-- O LittleFS (spiffs) guarda o resquício de um firmware original de web rádio: `radios.tsv` e
-  `stations.json` (BandNews FM, Jovem Pan News, Metropolitana FM Maceió, CBN Vale, Mix FM Teresina,
-  Antena 1 Rio, Rádio Bandeirantes Goiânia). Indica uso do speaker via stream de áudio.
+## Firmware de fábrica
+A unidade analisada vinha com um firmware de Arduino-ESP32 (IDF v5.5.5) cliente de tela remota e com resquícios de um firmware de web rádio no LittleFS (partição `spiffs`); a definição de placa gravada era "ESP32-S3-DevKitC-1-N8 (8 MB QD, No PSRAM)", mas **a placa real tem 16 MB de flash e 8 MB de PSRAM**: ajuste a configuração de placa nos projetos novos. O conteúdo de fábrica varia por lote; faça o backup antes de gravar (seção abaixo).
 
 ## Placa identificada: LCDWiki ES3C28P (vendida pela Fikra como "ESP32 S3 Display 2.8 touch – Preta")
-Fonte: manual técnico LCDWiki V1.0 (2025-06-14) + exemplos da Fikra, salvos em `fikra/`.
+Fonte: manual técnico LCDWiki V1.0 (2025-06-14) + exemplos da Fikra.
 Página: https://fikra.com.br/esp32/preta/ (manual, firmware de teste, projeto de caixa de som MP3/SD, STLs de case).
 Coerente com o chip medido (16 MB flash, 8 MB PSRAM). O manual diz PSRAM OPI; o esptool mostrou "AP_3v3".
 

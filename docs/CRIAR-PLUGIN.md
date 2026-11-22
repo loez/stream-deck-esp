@@ -1,5 +1,7 @@
 # Como criar um plugin para o Stream Deck ESP
 
+*[English](en/CREATE-PLUGIN.md)*
+
 Um plugin é uma pasta `*.deckplugin` com um `plugin.json`, um **serviço** em Node.js (roda em segundo plano) e, opcionalmente, uma **tela de configuração** em HTML por ação.
 Você escreve o serviço com o **SDK do projeto** (`sdk/deck-plugin.mjs`) e a tela com `/deck-ui.js` (servido pelo app). O fio de baixo nível (mensagens) está em [`PROTOCOLO-PLUGIN.md`](PROTOCOLO-PLUGIN.md);
 este guia cobre **tudo o que um plugin pode usar e como instalar, distribuir, desenvolver e depurar**. Plugins do Ulanzi Studio também rodam aqui (seção 16), mas **nada do projeto depende deles**.

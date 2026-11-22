@@ -1,4 +1,6 @@
-# LVGL na ES3C28P: o que medimos (2026-11-20, demo-lvgl, LVGL 9.6, ESP32-S3 240 MHz)
+# LVGL na ES3C28P: o que medimos (LVGL 9.6, ESP32-S3 240 MHz)
+
+*[English](../en/hardware/LVGL-PERFORMANCE.md)*
 
 ## Driver de tela
 - TFT_eSPI + DMA NÃO funciona no S3 com Arduino core 3.x (tela preta após o 1º bloco). Sem DMA funciona mas é lento.
@@ -22,7 +24,3 @@
 - Widget `colorwheel` não existe no LVGL 9: usar canvas RGB565 na PSRAM.
 - Menu: `CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=4096` no Arduino: malloc >= 4 KB vai para a PSRAM (lenta para DMA/render).
   Buffers de DMA: `heap_caps_malloc(MALLOC_CAP_DMA|MALLOC_CAP_INTERNAL)`.
-
-## Ferramenta de benchmark
-`demo-lvgl` imprime `[perf]` a cada 5 s no serial e aceita comandos: `1`-`4` troca de aba, `a`/`b`/`z` = 40/80/0 objetos,
-`k` liga/desliga 3 notas, `x/y/m/t/r` escondem grupos de widgets (experimentos). Útil para medir sem tocar na tela.

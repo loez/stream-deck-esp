@@ -1,5 +1,7 @@
 # Idiomas do app (i18n)
 
+*[English](en/TRANSLATION.md)*
+
 O app é multi-idioma: **português do Brasil** (base) e **inglês**. O idioma é escolhido em *Configurações > Placa e tela > Idioma*, vale para a página, para as mensagens do servidor, para o menu/diálogos do app Electron e para os plugins, e fica em `settings.json` (`lang`: `pt` ou `en`).
 Na primeira abertura, sem escolha, a página segue o idioma do navegador (português se for `pt*`, senão inglês); o app Electron segue o idioma do sistema.
 
@@ -18,7 +20,6 @@ O **texto em português é a chave** (estilo gettext): sem tradução, ou em `pt
 - Dado do usuário **não** é traduzido (nomes de páginas, títulos de botões). Os nomes criados pelo app (página nova, botão "Voltar" da subpasta) saem no idioma da hora da criação e depois são dados como os outros.
 - Mantenha as mesmas `{variáveis}` no original e na tradução.
 - Sem `${...}` dentro de `t('...')`: use variáveis.
-- No português (padrão) os nomes padrão dos botões do modo de paridade com o servidor Python ficam idênticos (os testes de paridade rodam em `pt`).
 - O firmware da placa (portal de Wi-Fi, serial) **ainda não** é traduzido.
 
 ## Adicionar um idioma

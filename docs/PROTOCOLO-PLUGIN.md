@@ -1,5 +1,7 @@
 # Protocolo de plugins do Stream Deck ESP (v2) e SDK
 
+*[English](en/PLUGIN-PROTOCOL.md)*
+
 Este documento define **o que um plugin pode fazer** e como ele fala com o app. O **SDK** (`sdk/deck-plugin.mjs`, para o serviço do plugin, e `/deck-ui.js`, para a tela de configuração) é a forma de escrever plugins;
 o protocolo abaixo é o que ele fala com o host (o servidor, `node/src/plugins.ts`, codificação em `node/src/plugin-protocol.ts`). Formato da pasta, manifesto, instalação (URL do GitHub, .zip), hot-reload, HTTP local e receitas: `CRIAR-PLUGIN.md`.
 

@@ -1,5 +1,7 @@
 # Conexão da placa por cabo USB
 
+*[English](en/USB-PROTOCOL.md)*
+
 Além do Wi-Fi, a placa fala com o servidor pelo cabo USB (porta USB-Serial/JTAG do ESP32-S3). É um **túnel HTTP**: a placa faz os mesmos pedidos de sempre
 (`GET /api/deck`, `GET /api/img/N.raw`, `GET /api/anim/N.bin`, `POST /api/press/N`), só que em quadros binários pela serial. O servidor repete cada pedido em `127.0.0.1`
 com o token dele e devolve a resposta; toda a lógica (grade, imagens, ações, plugins) é a mesma. **Sem Wi-Fi, sem mDNS e sem pareamento: o cabo é a prova de identidade.**

@@ -3,7 +3,7 @@
 *[Português](../ADAPTAR-PLACA.md)*
 
 This guide is for people who have **another board** (or want to use another screen) and want to run Stream Deck ESP on it. You can follow it yourself or hand it to an AI assistant together with your board's data.
-For the test battery to run on a new board, also see [NOVA-PLACA.md](../NOVA-PLACA.md) (Portuguese).
+For the test battery to run on a new board, also see [NEW-BOARD-TESTS.md](NEW-BOARD-TESTS.md).
 
 ## 1. Will your board work?
 
@@ -144,7 +144,7 @@ Flash (see "Flashing safely") and open the serial monitor (`pio device monitor`,
 | Odd colors only in text | Byte swap | Remove/add `lv_draw_sw_rgb565_swap` |
 | Reboots in a loop | PSRAM `memory_type` | Step 3 |
 
-The firmware's serial console accepts a `P` command that captures the screen so you can check it without a photo (see [NOVA-PLACA.md](../NOVA-PLACA.md)).
+The firmware's serial console accepts a `P` command that captures the screen so you can check it without a photo (see [NEW-BOARD-TESTS.md](NEW-BOARD-TESTS.md)).
 
 ### Step 7 — Touch
 1. Read the controller raw and print x,y while touching the **four corners and the center**.
@@ -159,7 +159,7 @@ Nothing changes: with the board on the same network as the computer, it finds th
 The bottleneck is **internal RAM** (Wi-Fi/TLS uses a lot). Care points:
 - **Small** LVGL buffers in internal DMA memory (24 lines are enough); the big frame goes to PSRAM.
 - Watch `[heap] interna … psram …` on serial after changing the grid several times: it must not drop on each change (leak).
-- Larger screens use more image memory in PSRAM (project ceiling: 6 MB). Read [hardware/MEMORIA-RAM.md](../hardware/MEMORIA-RAM.md) and [hardware/MULTICORE.md](../hardware/MULTICORE.md) (Portuguese; Core 0 = network, Core 1 = screen/touch).
+- Larger screens use more image memory in PSRAM (project ceiling: 6 MB). Read [hardware/MEMORY-RAM.md](hardware/MEMORY-RAM.md) and [hardware/MULTICORE.md](hardware/MULTICORE.md) (Core 0 = network, Core 1 = screen/touch).
 
 ### Step 10 — Fine tuning on the server (optional)
 In `node/src/settings.ts`: `MIN_BTN_MM` (minimum button size for a finger to hit) and `limitsFor` (font range and columns/rows per density). If your screen is used with "thick" fingers, raise the minimum.
@@ -173,7 +173,7 @@ In `node/src/settings.ts`: `MIN_BTN_MM` (minimum button size for a finger to hit
 
 ### Step 12 — Validate
 - Run `cd node && npm test` (includes the grid tests with a fake screen).
-- Do the battery in [NOVA-PLACA.md](../NOVA-PLACA.md): image, touch, grid (2x2 up to the maximum), page switching, GIF, memory, Wi-Fi for hours.
+- Do the battery in [NEW-BOARD-TESTS.md](NEW-BOARD-TESTS.md): image, touch, grid (2x2 up to the maximum), page switching, GIF, memory, Wi-Fi for hours.
 - Confirm the **ES3C28P still works** (build its env).
 - Document your board: pins, calibration and panel quirks in `docs/hardware/<BOARD>.md` (see `docs/hardware/ES3C28P.md` as an example) and open a pull request.
 
