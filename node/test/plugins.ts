@@ -132,7 +132,7 @@ async function main() {
   check(list.enabled && list.plugins.length === 2, 'dois plugins instalados são listados', JSON.stringify(list.plugins.map((p: any) => p.name)));
   const fake = list.plugins.find((p: any) => p.uuid === MAIN), html = list.plugins.find((p: any) => p.name === 'SoHtml');
   check(fake?.supported === true && fake.actions.length === 3 && fake.actions[0].hasPI && !fake.actions[1].hasPI, 'plugin Node: suportado, 3 ações (cor, sem tela, GIF), só a primeira tem tela de configuração');
-  { const { lanBlocked } = await import('../src/plugins.ts'); const L = '[Rede] EHOSTUNREACH 192.168.31.230:6466';
+  { const { lanBlocked } = await import('../src/plugins.ts'); const L = '[Rede] EHOSTUNREACH 192.168.0.50:6466';
     check(lanBlocked([L, L, L]) && !lanBlocked([L, L]) && !lanBlocked(['EHOSTUNREACH 8.8.8.8:443', 'EHOSTUNREACH 8.8.8.8:443', 'EHOSTUNREACH 8.8.8.8:443']) && lanBlocked(['connect 10.0.0.5:6466 EHOSTUNREACH', 'a 10.0.0.5:6466 EHOSTUNREACH', 'b 10.0.0.5:6466 EHOSTUNREACH']), 'rede local bloqueada: 3+ EHOSTUNREACH para IP privado marcam o aviso; IP público ou só 2 erros, não'); }
   check(html?.supported === false && /HTML|Node/.test(html.why), 'plugin com serviço em HTML: marcado como não suportado', html?.why);
   const base = '/plugins/com.test.fake.ulanziPlugin/';
