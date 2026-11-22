@@ -1,5 +1,7 @@
 # Plataformas: macOS, Windows e Linux
 
+*[English](en/PLATFORMS.md)*
+
 O servidor, a página de configuração, o host de plugins, a renderização e o firmware são iguais nos três sistemas. O que muda fica em **`node/src/platform/`**
 (`mac.ts`, `win.ts`, `linux.ts`; o `index.ts` escolhe pelo sistema, e `DECK_PLATFORM=darwin|win32|linux` força um, usado nos testes).
 Nenhum outro arquivo chama `open`, `osascript`, `xdotool` etc.: tudo passa por `platform.*`.
@@ -10,7 +12,7 @@ Nenhum outro arquivo chama `open`, `osascript`, `xdotool` etc.: tudo passa por `
 | Abrir site | `open` | `Start-Process` | `xdg-open` |
 | Atalho de teclado | System Events (precisa de **Acessibilidade**) | `SendKeys` | `xdotool key` (X11/XWayland) |
 | Digitar texto | cola com Cmd+V | cola com Ctrl+V | `xdotool type` (ou `wtype` no Wayland) |
-| Mídia / volume | teclas de mídia (HID, Acessibilidade) | `keybd_event` | `playerctl`, `pactl`/`wpctl`; reserva: teclas XF86 do `xdotool` |
+| Mídia / volume | veja a tabela abaixo | `keybd_event` | `playerctl`, `pactl`/`wpctl`; reserva: teclas XF86 do `xdotool` |
 | Brilho do monitor (ação de mídia) | tecla de brilho | WMI (só tela interna de notebook) | `brightnessctl` |
 | App em foco (troca de página) | `lsappinfo` | `GetForegroundWindow` (um PowerShell residente) | `xdotool getactivewindow` (só X11/XWayland) |
 | Lista de apps e ícones | `/Applications`, `plutil`, JXA, `sips` | atalhos do Menu Iniciar (.lnk), `System.Drawing` | arquivos `.desktop` e tema de ícones |
@@ -34,12 +36,12 @@ Quando falta uma ferramenta, o botão mostra a mensagem `instale xdotool ...` em
 ## Rodar e empacotar
 - Servidor sozinho: `node/iniciar.sh` (macOS/Linux) ou `node\iniciar.cmd` (Windows); ou `cd node && npm ci && npm start`.
 - App (bandeja): `cd app && npm ci && npm run dist` empacota **para o sistema em que roda** (saída em `app/dist/`). Os módulos nativos (`@napi-rs/canvas`) são
-  do sistema que fez o `npm ci`, então o pacote de cada sistema é gerado nele (o CI faz isso: `.github/workflows/streamdeck.yml`).
+  do sistema que fez o `npm ci`, então o pacote de cada sistema é gerado nele (o CI faz isso: `.github/workflows/ci.yml`).
 - Dados do app: `app.getPath('userData')` (macOS `~/Library/Application Support/Stream Deck ESP`, Windows `%APPDATA%\Stream Deck ESP`, Linux `~/.config/Stream Deck ESP`).
 - Ícones: `npm run icon` gera `.icns` (só no macOS), `.ico` e `.png`; os arquivos gerados ficam versionados em `app/build/`.
 
 ## Testes
-- `npm test` (máquina de desenvolvimento, no Mac): tudo, inclusive a paridade com o servidor Python e o reamostrador contra o Pillow.
+- `npm test` (máquina de desenvolvimento, no Mac): tudo.
 - `npm run test:ci`: o conjunto portável (roda em macOS, Windows e Linux; força `DECK_PLATFORM=darwin` por `test/darwin.env` para conferir os comandos do macOS em qualquer máquina).
 - `npm run test:platform`: a camada de sistema (atalhos, `.desktop`, scripts do PowerShell sem injeção, comandos gerados nos três sistemas).
 

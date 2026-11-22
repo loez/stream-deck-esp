@@ -1,5 +1,7 @@
 # Gravar o firmware pronto (sem compilar)
 
+*[English](en/FIRMWARE.md)*
+
 Cada Release traz o firmware da **ES3C28P** compilado pelo CI do GitHub (reproduzível: o mesmo código da tag):
 
 | Arquivo | Para quê |

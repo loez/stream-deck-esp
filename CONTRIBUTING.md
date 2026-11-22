@@ -18,7 +18,7 @@ pip install platformio       # firmware
 - No secrets, personal data, flash dumps (`*.bin`) or your `data/` folder in commits.
 
 ## New board?
-See `docs/ADAPTAR-PLACA.md` and add `docs/hardware/<BOARD>.md` (pins, panel quirks, touch calibration, photos).
+See `docs/en/ADAPT-BOARD.md` and add `docs/hardware/<BOARD>.md` (pins, panel quirks, touch calibration, photos).
 
 ## Layout
 `src/`, `include/`, `platformio.ini` firmware · `node/` server + configuration page + tests · `app/` Electron app · `sdk/` plugin SDK · `docs/` documentation · `tools/` bench tools.

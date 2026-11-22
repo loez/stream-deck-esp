@@ -1,6 +1,8 @@
 # Adaptar o Stream Deck para a sua placa ESP32 com tela de toque
 
-Este guia é para quem tem **outra placa** (ou quer usar outra tela) e quer rodar o nosso Stream Deck nela. Serve para fazer sozinho ou para entregar ao Claude junto com os dados da placa.
+*[English](en/ADAPT-BOARD.md)*
+
+Este guia é para quem tem **outra placa** (ou quer usar outra tela) e quer rodar o nosso Stream Deck nela. Serve para fazer sozinho ou para entregar a um assistente de IA (como o Claude) junto com os dados da placa.
 Para a bateria de testes de uma placa nova, veja também `NOVA-PLACA.md`.
 
 ## 1. Sua placa serve?
@@ -175,8 +177,8 @@ Em `node/src/settings.ts`: `MIN_BTN_MM` (tamanho mínimo de botão para o dedo a
 - Confirme que a **ES3C28P continua igual** (compile o env dela).
 - Documente a sua placa: pinos, calibração e manhas do painel em `docs/hardware/<PLACA>.md` (veja `docs/hardware/ES3C28P.md` como exemplo) e abra um pull request.
 
-## 4. Peça ajuda ao Claude (o que enviar)
-Cole isto preenchido e o Claude escreve o `board_<nome>.cpp` e o `[env:…]`:
+## 4. Peça ajuda (o que enviar)
+Cole isto preenchido, numa issue ou para um assistente de IA, e peça o `board_<nome>.cpp` e o `[env:…]`:
 ```
 Placa: <modelo + link>
 Chip/flash/PSRAM: <ex.: ESP32-S3, 16 MB, 8 MB octal>
@@ -185,7 +187,7 @@ Toque: <controlador, I2C (SDA/SCL/endereço) ou SPI, pinos de reset/INT>
 Backlight: <pino, PWM?>   Extras a manter desligados: <amplificador, LED...>
 Exemplo oficial do fabricante: <link ou arquivo>
 ```
-O Claude precisa da placa **ligada no computador** para gravar e ver os resultados (e vai pedir que você replugue o cabo e confirme o que vê na tela).
+Quem ajudar precisa da placa **ligada no computador** para gravar e ver os resultados (e vai pedir que você replugue o cabo e confirme o que vê na tela).
 
 ## 5. Limites conhecidos
 - **Sem toque:** não é suportado hoje (a interface é a tela de toque).

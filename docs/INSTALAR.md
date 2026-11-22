@@ -1,5 +1,7 @@
 # Instalar o Stream Deck ESP (sem assinatura da Apple)
 
+*[English](en/INSTALL.md)*
+
 Os pacotes vêm da página **Releases** do GitHub (um por sistema; Mac tem Apple Silicon e Intel).
 
 ## macOS
@@ -26,6 +28,6 @@ O firewall pergunta uma vez pela rede privada: permita (a placa precisa).
 `tar xzf Stream-Deck-ESP-*-linux-*.tar.gz` e rode `Stream Deck ESP`. Dependências: ver `PLATAFORMAS.md`.
 
 ## Gerar os pacotes
-- **Publicar (todas as plataformas):** `git tag v1.0.0 && git push origin v1.0.0` — o workflow `release` compila nos 4 runners e cria a Release.
+- **Publicar (todas as plataformas):** `git tag v1.0.0 && git push origin v1.0.0` — o workflow `release` compila nos 4 runners, cria a Release e anexa o firmware da placa.
   Teste sem publicar: Actions > release > Run workflow (os pacotes ficam como artefatos por 14 dias).
 - **Só no seu Mac:** `cd app && npm run release` (gera `dist/Stream-Deck-ESP-<versão>-mac-arm64.zip`).
