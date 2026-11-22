@@ -1,6 +1,7 @@
 # Stream Deck ESP: testes do servidor, validação de mídia (Linux/Windows), compilação do firmware e empacotamento do app em macOS, Windows e Linux.
 name: ci
 on:
+  workflow_dispatch:   # permite rodar à mão (Actions > ci > Run workflow)
   push: { paths: ['node/**', 'app/**', 'src/**', 'include/**', 'platformio.ini', '.github/workflows/ci.yml'] }
   pull_request: { paths: ['node/**', 'app/**', 'src/**', 'include/**', 'platformio.ini', '.github/workflows/ci.yml'] }
 jobs:
