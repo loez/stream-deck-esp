@@ -31,7 +31,7 @@ The board finds the app by mDNS (`_streamdeck._tcp`), downloads button images, a
 
 ## Quick start
 1. **App:** download the package for your system from the Releases page (macOS `.dmg`, Windows `.zip`, Linux `.tar.gz`; see [docs/INSTALAR.md](docs/INSTALAR.md) for the unsigned-app steps). Or run from source: `cd node && npm ci && npm start`, then open <http://localhost:8765>.
-2. **Firmware:** `pip install platformio` then, with the board plugged in, `pio run -t upload`. (Back up the factory firmware first: [docs/hardware/ES3C28P.md](docs/hardware/ES3C28P.md).)
+2. **Firmware:** flash the prebuilt binary from the Release with `esptool` ([docs/FIRMWARE.md](docs/FIRMWARE.md), Portuguese) or build it yourself: `pip install platformio`, then with the board plugged in `pio run -t upload`. (Back up the factory firmware first: [docs/hardware/ES3C28P.md](docs/hardware/ES3C28P.md).)
 3. **Wi-Fi:** on first boot the board opens its own Wi-Fi portal to pick your network.
 4. **Pair:** in the app, click **Parear placa** (pair board) and the board gets its access token. Done — configure buttons in the page.
 
@@ -51,7 +51,7 @@ CI (GitHub Actions) runs the server tests on macOS/Windows/Linux, a real PulseAu
 Details and a manual Windows test script: [docs/PLATAFORMAS.md](docs/PLATAFORMAS.md).
 
 ## Documentation *(mostly Portuguese for now; contributions welcome)*
-[Install](docs/INSTALAR.md) · [Platforms](docs/PLATAFORMAS.md) · [Standalone mode](docs/MODO-AUTONOMO.md) · [USB protocol](docs/PROTOCOLO-USB.md) · [Sliders](docs/CONTROLES-DESLIZANTES.md) · [Create a plugin](docs/CRIAR-PLUGIN.md) · [Plugin protocol](docs/PROTOCOLO-PLUGIN.md) · [Translations](docs/TRADUCAO.md) · [Adapt to another board](docs/ADAPTAR-PLACA.md) · [Hardware notes](docs/hardware/)
+[Install](docs/INSTALAR.md) · [Platforms](docs/PLATAFORMAS.md) · [Standalone mode](docs/MODO-AUTONOMO.md) · [USB protocol](docs/PROTOCOLO-USB.md) · [Sliders](docs/CONTROLES-DESLIZANTES.md) · [Create a plugin](docs/CRIAR-PLUGIN.md) · [Plugin protocol](docs/PROTOCOLO-PLUGIN.md) · [Translations](docs/TRADUCAO.md) · [Flash the firmware](docs/FIRMWARE.md) · [Adapt to another board](docs/ADAPTAR-PLACA.md) · [Hardware notes](docs/hardware/)
 
 ## Security model
 The server listens on all interfaces so the board can reach it, but the configuration page and settings accept **localhost only**; the board authenticates with a token obtained in a 90-second pairing window. Do not expose port 8765 outside your LAN. **Plugins run code with your user's permissions** — install only plugins you trust. Standalone mode stores webhook/Home Assistant/MQTT secrets in the board's flash in clear text; never publish a flash dump. See [SECURITY.md](SECURITY.md).

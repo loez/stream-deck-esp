@@ -40,4 +40,12 @@ jobs:
       - env: { GH_TOKEN: '${{ github.token }}' }
         run: |
           gh release create "${{ github.ref_name }}" pacotes/* --repo "${{ github.repository }}" --title "Stream Deck ESP ${{ github.ref_name }}" \
-            --notes "Mac: veja docs/INSTALAR.md (app sem assinatura da Apple: um comando libera). Windows: extraia o zip e abra Stream Deck ESP.exe. Linux: extraia o tar.gz."
+            --notes "Mac: veja docs/INSTALAR.md (app sem assinatura da Apple: um comando libera). Windows: extraia o zip e abra Stream Deck ESP.exe. Linux: extraia o tar.gz. Firmware da placa ES3C28P: arquivos stream-deck-esp-firmware-* (como gravar: docs/FIRMWARE.md)."
+  firmware:   # compila o firmware no CI e anexa à Release depois que ela existe
+    needs: publicar
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    uses: ./.github/workflows/firmware-release.yml
+    with:
+      tag: ${{ github.ref_name }}

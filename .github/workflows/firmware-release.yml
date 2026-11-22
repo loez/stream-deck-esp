@@ -1,0 +1,39 @@
+# Compila o firmware da ES3C28P no CI e anexa os binários a uma Release existente (os binários compilados na máquina de quem desenvolve embutem caminhos locais; os do CI não).
+# Roda sozinho no fim do workflow `release` (workflow_call) e pode ser disparado à mão: Actions > firmware-release > Run workflow (tag = v1.0.0).
+name: firmware-release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da Release que recebe os binários (ex.: v1.0.0)'
+        required: true
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install platformio
+      - run: pio run
+      - name: Reunir os binários
+        run: |
+          V="${{ inputs.tag }}"; V="${V#v}"
+          mkdir out
+          cp .pio/build/es3c28p/firmware.factory.bin "out/stream-deck-esp-firmware-es3c28p-$V-completo.bin"
+          cp .pio/build/es3c28p/firmware.bin "out/stream-deck-esp-firmware-es3c28p-$V-app.bin"
+          if strings -a out/*.bin | grep -q "/Users/"; then echo "binário com caminho de máquina de desenvolvimento"; exit 1; fi
+          (cd out && sha256sum *.bin > SHA256SUMS-firmware.txt && cat SHA256SUMS-firmware.txt)
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" out/* --repo "${{ github.repository }}" --clobber

@@ -31,7 +31,7 @@ A placa acha o app por mDNS (`_streamdeck._tcp`), baixa as imagens dos botões e
 
 ## Começando
 1. **App:** baixe o pacote do seu sistema na página de Releases (macOS `.dmg`, Windows `.zip`, Linux `.tar.gz`; para o app sem assinatura veja [docs/INSTALAR.md](docs/INSTALAR.md)). Ou rode do código: `cd node && npm ci && npm start` e abra <http://localhost:8765>.
-2. **Firmware:** `pip install platformio` e, com a placa ligada por USB, `pio run -t upload`. (Faça antes o backup do firmware de fábrica: [docs/hardware/ES3C28P.md](docs/hardware/ES3C28P.md).)
+2. **Firmware:** grave o binário pronto da Release com o `esptool` ([docs/FIRMWARE.md](docs/FIRMWARE.md)) ou compile você mesmo: `pip install platformio` e, com a placa ligada por USB, `pio run -t upload`. (Faça antes o backup do firmware de fábrica: [docs/hardware/ES3C28P.md](docs/hardware/ES3C28P.md).)
 3. **Wi-Fi:** no primeiro boot a placa abre o próprio portal Wi-Fi para escolher a rede.
 4. **Parear:** no app, clique em **Parear placa** e a placa recebe a chave de acesso. Pronto: configure os botões na página.
 
@@ -51,7 +51,7 @@ O CI (GitHub Actions) roda os testes do servidor em macOS/Windows/Linux, um test
 Detalhes e um roteiro de teste manual para o Windows: [docs/PLATAFORMAS.md](docs/PLATAFORMAS.md).
 
 ## Documentação
-[Instalar](docs/INSTALAR.md) · [Plataformas](docs/PLATAFORMAS.md) · [Modo autônomo](docs/MODO-AUTONOMO.md) · [Protocolo USB](docs/PROTOCOLO-USB.md) · [Controles deslizantes](docs/CONTROLES-DESLIZANTES.md) · [Criar plugin](docs/CRIAR-PLUGIN.md) · [Protocolo de plugins](docs/PROTOCOLO-PLUGIN.md) · [Traduções](docs/TRADUCAO.md) · [Adaptar a outra placa](docs/ADAPTAR-PLACA.md) · [Notas de hardware](docs/hardware/)
+[Instalar](docs/INSTALAR.md) · [Plataformas](docs/PLATAFORMAS.md) · [Modo autônomo](docs/MODO-AUTONOMO.md) · [Protocolo USB](docs/PROTOCOLO-USB.md) · [Controles deslizantes](docs/CONTROLES-DESLIZANTES.md) · [Criar plugin](docs/CRIAR-PLUGIN.md) · [Protocolo de plugins](docs/PROTOCOLO-PLUGIN.md) · [Traduções](docs/TRADUCAO.md) · [Gravar o firmware](docs/FIRMWARE.md) · [Adaptar a outra placa](docs/ADAPTAR-PLACA.md) · [Notas de hardware](docs/hardware/)
 
 ## Segurança
 O servidor escuta em todas as interfaces para a placa alcançá-lo, mas a página de configuração aceita **só localhost**; a placa se autentica com um token obtido numa janela de pareamento de 90 s. Não exponha a porta 8765 fora da sua rede local. **Plugins executam código com as permissões do seu usuário**: instale só os de confiança. O modo autônomo guarda segredos de webhook/Home Assistant/MQTT em claro na flash da placa; nunca publique um dump da flash. Veja [SECURITY.md](SECURITY.md).
