@@ -39,6 +39,14 @@ export function posixTz(iana: string): string {
   } catch { return 'UTC0'; }
 }
 
+// ---------- bateria e tela da placa (plugin "Bateria da Placa") ----------
+// Bateria (LiHV 4,35 V, divisor do GPIO9 com K=2,0; curva LiPo). O servidor e a placa (modo autônomo) usam os mesmos valores: a curva vai no perfil.
+export const BAT_K = 2.0, BAT_CURVE: [number, number][] = [[3.30, 0], [3.50, 5], [3.60, 15], [3.70, 35], [3.80, 55], [3.90, 70], [4.00, 82], [4.10, 92], [4.20, 100]];
+const BOARD_PLUGIN = 'com.luiz.ulanzistudio.bateriaesp';
+const BOARD_WD: Record<string, string> = { nivel: 'battery', brilhomais: 'bup', brilhomenos: 'bdown', apagar: 'boff', desligar: 'bpower' };   // ação do plugin -> botão que a própria placa desenha e executa
+/** Ação do plugin "Bateria da Placa" -> tipo de botão da placa (null se não for dele). Esses botões só mexem na própria placa: funcionam sem o PC. */
+export const boardWidget = (a: Record<string, any> | null | undefined): string | null => (a?.type === 'plugin' && a.plugin === BOARD_PLUGIN ? BOARD_WD[String(a.action).split('.').pop()!] ?? null : null);
+
 // ---------- perfil ----------
 export type SaTile = { i: number; x: number; y: number; w: number; h: number; bar: number; label: string; fs: number; img: number; wd?: string; ex?: Record<string, unknown> };
 export type SaProfile = {
@@ -46,6 +54,7 @@ export type SaProfile = {
   clock: { h24: boolean; seconds: boolean }; idle: number; night: { on: boolean; from: string; to: string; pct: number };
   weather: { lat: number; lon: number; units: string; name: string } | null; icons: string[];
   geom: { cols: number; rows: number; font: number; top: number; w: number; h: number; bar: number }; page: string; tiles: SaTile[];
+  bat: { k: number; curve: [number, number][] };
   tx: Record<string, string>;   // textos que a placa mostra, já no idioma do app
 };
 const EX_FIELDS: Record<string, string[]> = { webhook: ['url', 'method', 'body', 'ctype', 'headers'], homeassistant: ['url', 'token', 'domain', 'service', 'entity', 'data'], mqtt: ['host', 'port', 'tls', 'user', 'pass', 'topic', 'payload', 'retain'] };
@@ -58,14 +67,16 @@ export function buildProfile(store: Store): SaProfile | null {
   const tiles: SaTile[] = store.tiles(pg.id).map((t) => {
     const bt = pg.buttons[t.slot]!, tb = store.tileBox(t.c, t.r), f = labelFit(bt, pageName, tb), a = bt.action as Record<string, any> | null;
     const o: SaTile = { i: t.i, x: t.x, y: t.y, w: t.w, h: t.h, bar: tb.bar, label: f.text, fs: f.fs, img: bt.imgrev };
-    if (a?.type === 'widget' && a.kind !== 'nowplaying' && a.kind !== 'notifications') o.wd = String(a.kind);   // "Tocando agora" precisa do computador: na placa sozinha o botão fica sem imagem própria
+    const bw = boardWidget(a);
+    if (bw) o.wd = bw;
+    else if (a?.type === 'widget' && a.kind !== 'nowplaying' && a.kind !== 'notifications') o.wd = String(a.kind);   // "Tocando agora" precisa do computador: na placa sozinha o botão fica sem imagem própria
     else if (a && OFFLINE_TYPES.includes(a.type)) { const ex: Record<string, unknown> = { k: a.type }; for (const k of EX_FIELDS[a.type]!) if (a[k] !== undefined && a[k] !== '' && a[k] !== false) ex[k] = a[k]; o.ex = ex; }
     return o;
   });
   const tz = tzOf(s), w = s.weather;
   const p: Omit<SaProfile, 'rev'> = {
     v: 1, tz: posixTz(tz), tzName: tz, lang: getLang(), clock: { ...s.clock }, idle: s.idleReturnS, night: { ...s.nightDim },
-    weather: w ? { lat: w.lat, lon: w.lon, units: w.units, name: w.name } : null, icons: [...WEATHER_KINDS],
+    weather: w ? { lat: w.lat, lon: w.lon, units: w.units, name: w.name } : null, icons: [...WEATHER_KINDS], bat: { k: BAT_K, curve: BAT_CURVE },
     geom: { cols: g.cols, rows: g.rows, font: g.font, top: g.top, w: g.w, h: g.h, bar: g.bar }, page: pg.name, tiles,
     tx: { auto: tr('Modo autônomo'), touch: tr('Toque para ver os botões'), needpc: tr('precisa do computador'), nodata: tr('sem dados'), sent: tr('enviado'),
       sun: tr('Céu limpo'), moon: tr('Céu limpo'), partly: tr('Parcialmente nublado'), cloud: tr('Nublado'), fog: tr('Neblina'), rain: tr('Chuva'), storm: tr('Tempestade'), snow: tr('Neve') },
@@ -88,5 +99,5 @@ export function offlineReport(store: Store): { slot: number; label: string; ok: 
   const s = getStandalone(), pg = s.page === null ? null : store.getPage(s.page); if (!pg) return [];
   const pageName = (id: number) => store.getPage(id)?.name;
   return store.tiles(pg.id).map((t) => { const bt = pg.buttons[t.slot]!, a = bt.action as Record<string, any> | null, f = labelFit(bt, pageName, store.tileBox(t.c, t.r));
-    return { slot: t.slot, label: f.text.replace(/\n/g, ' ') || (a?.type ?? ''), kind: String(a?.type ?? ''), ok: !!a && ((a.type === 'widget' && a.kind !== 'nowplaying' && a.kind !== 'notifications') || OFFLINE_TYPES.includes(a.type)) }; }).filter((x) => x.kind);
+    return { slot: t.slot, label: f.text.replace(/\n/g, ' ') || (a?.type ?? ''), kind: String(a?.type ?? ''), ok: !!a && (boardWidget(a) !== null || (a.type === 'widget' && a.kind !== 'nowplaying' && a.kind !== 'notifications') || OFFLINE_TYPES.includes(a.type)) }; }).filter((x) => x.kind);
 }

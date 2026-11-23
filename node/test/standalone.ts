@@ -6,7 +6,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import { ROOT } from '../src/env.ts';
-import { POSIX_TZ, posixTz } from '../src/sa-profile.ts';
+import { BAT_CURVE, POSIX_TZ, boardWidget, posixTz } from '../src/sa-profile.ts';
 
 let checks = 0; const fails: string[] = [];
 const check = (ok: boolean, what: string, detail = '') => { checks++; if (ok) console.log(`  ✓ ${what}`); else { fails.push(what + ' ' + detail); console.log(`  ✗ ${what} ${detail}`); } };
@@ -25,6 +25,12 @@ function posixStd(tz: string): { std: number; dst: boolean } {
   const h = Number(m[1]), mm = Number(m[2] ?? 0);
   return { std: -(Math.sign(h) || 1) * (Math.abs(h) * 60 + mm) * (h === 0 ? 0 : 1), dst: /^(?:<[^>]+>|[A-Za-z]{3,})/.test(m[3] ?? '') };
 }
+
+section('plugin Bateria da Placa -> botões da própria placa');
+{ const P = 'com.luiz.ulanzistudio.bateriaesp', a = (n: string) => ({ type: 'plugin', plugin: P, action: `${P}.${n}` });
+  check(boardWidget(a('nivel')) === 'battery' && boardWidget(a('brilhomais')) === 'bup' && boardWidget(a('brilhomenos')) === 'bdown' && boardWidget(a('apagar')) === 'boff' && boardWidget(a('desligar')) === 'bpower', 'as 5 ações do plugin viram botões da placa');
+  check(boardWidget({ type: 'plugin', plugin: 'outro.plugin', action: 'x.nivel' }) === null && boardWidget({ type: 'webhook' }) === null && boardWidget(null) === null, 'outros plugins/ações não são afetados');
+  check(BAT_CURVE[0]![1] === 0 && BAT_CURVE.at(-1)![1] === 100, 'curva da bateria vai no perfil (0..100%)'); }
 
 const PORT = 8846, TOKEN = 'tok-sa-teste-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', SECRET = 'segredo-do-home-assistant-123';
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'deck-sa-')), DATA = path.join(TMP, 'data');

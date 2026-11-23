@@ -43,6 +43,7 @@ static volatile uint32_t g_lastTouch = 0;   // millis do último toque (modo aut
 static volatile int g_injX = -1, g_injY = -1; static volatile uint32_t g_injUntil = 0;   // toque virtual (serial: T x,y)
 static volatile int g_blTarget = 255;                       // brilho pedido pelo servidor (Core 0 grava, Core 1 aplica)
 static volatile bool g_powerOff = false;   // servidor pediu para desligar a placa (só o RESET volta)
+static volatile int g_saPct = 100, g_batPct = -1;   // modo autônomo: brilho escolhido (10-100, passos de 10) e bateria (% ; -1 sem leitura)
 static volatile bool g_scrOff = false, g_wokePend = false;  // tela apagada (pelo servidor ou por nós); acordou por toque e o servidor ainda não sabe
 static void touch_cb(lv_indev_t *, lv_indev_data_t *d) {
   static int lx = 0, ly = 0; static bool swallow = false;
@@ -65,7 +66,7 @@ static volatile int g_status = ST_SEARCH;
 // Botões ("tiles"): o servidor manda a lista pronta em /api/deck, cada um com seu retângulo (um botão juntado é um tile maior). g_ui = o que está na tela (só o Core 1 mexe); g_net = o que o servidor mandou (só o Core 0 mexe)
 #define MARGIN_X 5
 #define GAP 6
-struct Tile { int i, x, y, w, h, bar; uint8_t sl, slr; uint32_t slc; uint8_t wd; };   // wd: botão desenhado pela própria placa no modo autônomo (1 relógio, 2 clima)   // i = índice do botão na placa (linha*colunas + coluna do canto superior esquerdo); retângulo em pixels; altura da faixa do nome; sl = controle deslizante (0 não, 1 horizontal, 2 vertical), slr = relativo (sem preenchimento), slc = cor RGB
+struct Tile { int i, x, y, w, h, bar; uint8_t sl, slr; uint32_t slc; uint8_t wd; };   // wd: botão desenhado pela própria placa no modo autônomo (1 relógio, 2 clima, 3 bateria, 4/5 brilho +/-, 6 apagar tela, 7 desligar placa: os 5 do plugin "Bateria da Placa")   // i = índice do botão na placa (linha*colunas + coluna do canto superior esquerdo); retângulo em pixels; altura da faixa do nome; sl = controle deslizante (0 não, 1 horizontal, 2 vertical), slr = relativo (sem preenchimento), slc = cor RGB
 struct Geom { int cols, rows, font, top, n; Tile t[MAXBTN]; };   // font = fonte escolhida; top = y do 1º botão (36 com a faixa de status, 5 sem ela)
 static void makeUniform(Geom &g, int cols, int rows, int w, int h, int bar, int font, int top) {   // grade uniforme (servidor sem botões juntados e estado inicial)
   memset(&g, 0, sizeof g); g.cols = cols; g.rows = rows; g.font = font; g.top = top; g.n = min(cols * rows, MAXBTN);
@@ -538,14 +539,21 @@ static void nap(uint32_t ms) {   // espera; com o portal aberto continua atenden
   for (uint32_t t = millis(); millis() - t < ms; delay(10)) portalTick(WiFi.status() == WL_CONNECTED, g_everUp);
 }
 // ---------------- Modo autônomo: entrar, sair, tocar (Core 0) ----------------
-static uint32_t g_offSince = 0;
+static uint32_t g_offSince = 0, g_batAt = 0;
+static int batPercent(uint32_t mv) {   // mesma conta do servidor (batteryInfo em server.ts); K e curva vêm do perfil. -1 = sem bateria/leitura fora de 3,0-4,6 V
+  JsonObjectConst b = saProfile()["bat"]; JsonArrayConst c = b["curve"]; if (c.size() < 2) return -1;
+  const float v = mv * (b["k"] | 2.0f) / 1000.0f; if (!mv || v < 3.0f || v > 4.6f) return -1;
+  if (v <= (float)c[0][0]) return 0;
+  for (size_t i = 1; i < c.size(); i++) if (v <= (float)c[i][0]) { const float v0 = c[i - 1][0], p0 = c[i - 1][1], v1 = c[i][0], p1 = c[i][1]; return (int)lroundf(p0 + (p1 - p0) * (v - v0) / (v1 - v0)); }
+  return 100;
+}
 // Monta a grade a partir do perfil guardado (mesmo caminho que o poll() usa com a lista do servidor): o Core 1 refaz a tela e as imagens vêm da flash
 static void saApplyGrid() {
   if (!saHave()) return;
   JsonObjectConst p = saProfile(); JsonArrayConst tl = p["tiles"]; Geom ng; memset(&ng, 0, sizeof ng);
   ng.cols = p["geom"]["cols"] | 4; ng.rows = p["geom"]["rows"] | 2; ng.font = p["geom"]["font"] | 12; ng.top = p["geom"]["top"] | 36; ng.n = min((int)tl.size(), MAXBTN);
   for (int k = 0; k < ng.n; k++) {
-    const char *wd = tl[k]["wd"] | ""; uint8_t w = !strcmp(wd, "clock") ? 1 : !strcmp(wd, "weather") ? 2 : 0;
+    const char *wd = tl[k]["wd"] | ""; uint8_t w = !strcmp(wd, "clock") ? 1 : !strcmp(wd, "weather") ? 2 : !strcmp(wd, "battery") ? 3 : !strcmp(wd, "bup") ? 4 : !strcmp(wd, "bdown") ? 5 : !strcmp(wd, "boff") ? 6 : !strcmp(wd, "bpower") ? 7 : 0;
     ng.t[k] = {tl[k]["i"] | 0, tl[k]["x"] | 0, tl[k]["y"] | 0, tl[k]["w"] | 0, tl[k]["h"] | 0, tl[k]["bar"] | 0, 0, 0, 0, w};
   }
   bool bad = ng.n < 1; size_t total = 0;
@@ -572,6 +580,7 @@ static void saApplyGrid() {
 }
 static void saEnter() {
   if (!saHave() || g_saMode) return;
+  g_saPct = constrain(((int)lroundf(g_blTarget / 2.55f) + 5) / 10 * 10, 10, 100); g_batAt = 0;   // continua do brilho que o servidor tinha
   saApplyGrid(); g_saMode = true; g_saUiReq = 1; Serial.println("[sa] servidor ausente: modo autonomo");
 }
 static void saLeave() {
@@ -585,7 +594,14 @@ static void saPress(int idx) {   // toque num botão no modo autônomo: executa 
   if (ti < 0 || !saHave()) { Serial.printf("[sa] toque %d ignorado (tile %d, perfil %d)\n", idx, ti, (int)saHave()); return; }
   JsonObjectConst tile = saProfile()["tiles"][ti];
   Serial.printf("[sa] toque %d -> botao %d: %s\n", idx, ti, !tile["ex"].isNull() ? (const char *)(tile["ex"]["k"] | "?") : tile["wd"].is<const char *>() ? "widget" : "precisa do computador");
-  if (tile["wd"].is<const char *>()) return;                       // relógio/clima: nada a executar
+  if (tile["wd"].is<const char *>()) {                             // relógio/clima: nada a executar; os 5 da "Bateria da Placa" mexem na própria placa
+    const char *wd = tile["wd"] | "";
+    if (!strcmp(wd, "bup")) g_saPct = min(100, g_saPct + 10); else if (!strcmp(wd, "bdown")) g_saPct = max(10, g_saPct - 10);
+    else if (!strcmp(wd, "boff")) g_scrOff = true; else if (!strcmp(wd, "bpower")) g_powerOff = true; else if (!strcmp(wd, "battery")) g_batAt = 0;
+    if (!strcmp(wd, "bup") || !strcmp(wd, "bdown")) { prefs.putInt("sapct", g_saPct); g_scrOff = false; }
+    if (strcmp(wd, "clock") && strcmp(wd, "weather")) g_flashReq[ti] = 1;
+    return;
+  }
   if (!tile["ex"].isNull() && execStart(tile["ex"], ti)) return;   // (variante const: is<JsonObject>() seria sempre falso)   // o resultado chega por execDone (borda verde/vermelha)
   g_flashReq[ti] = 2;
 }
@@ -623,6 +639,7 @@ static void netTask(void *) {
       if (!wifi) { wasUp = false; ntpOn = false; }
       if (wifi && !ntpOn) { saTimeStart(); ntpOn = true; }
       saWeatherTick(wifi);
+      if (!g_batAt || millis() - g_batAt > 5000) { g_batAt = millis() | 1; g_batPct = batPercent(batMv()); }
       { SlideEv se; while (xQueueReceive(slideQ, &se, 0) == pdTRUE) {} }
       int b; while (xQueueReceive(pressQ, &b, pdMS_TO_TICKS(100)) == pdTRUE) { if (b >= PRESS_LONG) b -= PRESS_LONG; if (b >= 0) saPress(b); }   // sem servidor: segurar = tocar; deslizar não faz nada
       if (wifi && millis() - lastProbe > 5000) { lastProbe = millis(); g_host = ""; if (discover() && probeServer()) { saLeave(); lastPoll = 0; } else g_host = ""; }
@@ -695,11 +712,12 @@ static void clockText(char *tm, size_t tn, char *dt, size_t dn) {
   if (g_saUi.h24) snprintf(tm, tn, "%02d:%02d%s", t.tm_hour, t.tm_min, sec); else { int h = t.tm_hour % 12; if (!h) h = 12; snprintf(tm, tn, "%d:%02d%s %s", h, t.tm_min, sec, t.tm_hour < 12 ? "AM" : "PM"); }
   if (g_saUi.en) snprintf(dt, dn, "%s, %s %d", WD_EN[t.tm_wday], MO_EN[t.tm_mon], t.tm_mday); else snprintf(dt, dn, "%s, %d %s", WD_PT[t.tm_wday], t.tm_mday, MO_PT[t.tm_mon]);
 }
-static int nightBrightness() {   // 255 normal; no horário noturno e sem toque há 30 s, o brilho escolhido
-  if (!g_saUi.night || !saTimeValid() || millis() - g_lastTouch < 30000) return 255;
+static int nightBrightness() {   // o brilho escolhido (g_saPct) normal; no horário noturno e sem toque há 30 s, o brilho escolhido
+  const int base = g_saPct * 255 / 100;
+  if (!g_saUi.night || !saTimeValid() || millis() - g_lastTouch < 30000) return base;
   time_t now = time(nullptr); struct tm t; localtime_r(&now, &t); const int m = t.tm_hour * 60 + t.tm_min, f = g_saUi.nightFrom, e = g_saUi.nightTo;
   const bool in = f <= e ? (m >= f && m < e) : (m >= f || m < e);
-  return in ? max(8, g_saUi.nightPct * 255 / 100) : 255;
+  return in ? min(base, max(8, g_saUi.nightPct * 255 / 100)) : base;
 }
 static void ckRefresh() {   // textos que dependem do perfil/clima
   if (!g_ckOv) return;
@@ -744,7 +762,9 @@ static void saUiTick() {   // Core 1, a cada volta do loop
     if (g_ckVisible) { if (strcmp(lv_label_get_text(g_ckTime), tm)) lv_label_set_text(g_ckTime, tm); if (strcmp(lv_label_get_text(g_ckDate), dt)) lv_label_set_text(g_ckDate, dt); lv_obj_align(g_ckTime, LV_ALIGN_TOP_MID, 0, 14); lv_obj_align(g_ckDate, LV_ALIGN_TOP_MID, 0, BOARD.h >= 200 ? 100 : 80); }
     for (int i = 0; i < g_ui.n; i++) {   // botões Relógio/Clima da grade
       if (!g_wl[i] || !g_ui.t[i].wd) continue; char b[32];
-      if (g_ui.t[i].wd == 1) strlcpy(b, tm, sizeof b); else if (g_wValid) snprintf(b, sizeof b, "%d°%c", (int)g_wTemp, g_saUi.units == 'f' ? 'F' : 'C'); else strlcpy(b, "--", sizeof b);
+      const int wk = g_ui.t[i].wd;
+      if (wk >= 3) { if (wk == 3) { if (g_batPct >= 0) snprintf(b, sizeof b, "%d%%", (int)g_batPct); else strlcpy(b, "--", sizeof b); } else if (wk <= 5) snprintf(b, sizeof b, "%s %d%%", wk == 4 ? "+" : "-", (int)g_saPct); else strlcpy(b, wk == 6 ? "OFF" : "POWER", sizeof b); }
+      else if (g_ui.t[i].wd == 1) strlcpy(b, tm, sizeof b); else if (g_wValid) snprintf(b, sizeof b, "%d°%c", (int)g_wTemp, g_saUi.units == 'f' ? 'F' : 'C'); else strlcpy(b, "--", sizeof b);
       if (strcmp(lv_label_get_text(g_wl[i]), b)) { lv_label_set_text(g_wl[i], b); lv_obj_center(g_wl[i]); }
     }
   }
@@ -760,7 +780,7 @@ void setup() {
   { esp_task_wdt_config_t w = {}; w.timeout_ms = 10000; w.idle_core_mask = (1 << 1); w.trigger_panic = true; esp_task_wdt_reconfigure(&w); }
   boardInit();   // pinos de energia, I2C, toque e backlight apagado (src/board_<nome>.cpp)
   Serial.printf("[placa] %s %dx%d %d ppi\n", BOARD.name, BOARD.w, BOARD.h, BOARD.ppi);
-  prefs.begin("deck", false); g_tok = prefs.getString("tok", "");
+  prefs.begin("deck", false); g_tok = prefs.getString("tok", ""); g_saPct = constrain(prefs.getInt("sapct", 100), 10, 100);
   g_imgMux = xSemaphoreCreateMutex();
   saInit(); saLoadProfile(); execSetCallback(execDone);   // perfil do modo autônomo (flash) e retorno das ações de rede
   g_pollBuf = (uint8_t *)heap_caps_malloc(POLL_CAP, MALLOC_CAP_SPIRAM); usbLinkInit();

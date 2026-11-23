@@ -27,7 +27,7 @@ import type { UsbBridge } from './usb-port.ts';
 import type { Button } from './config.ts';
 import { fitLabel, labelFit, textWidth } from './fit.ts';
 import { renderRaw, renderPreview, processUpload, pageIconFile, invalidateRaw, toRgb565 } from './render.ts';
-import { buildProfile, iconCanvas, offlineReport } from './sa-profile.ts';
+import { BAT_CURVE, BAT_K, buildProfile, iconCanvas, offlineReport } from './sa-profile.ts';
 import { isGif, decodeGif, animTiles, planLimits, tileAnim, animRev, encodeAnim } from './anim.ts';
 import { listApps, bundleIdOf } from './apps.ts';
 import type { PluginHost } from './plugins.ts';
@@ -54,7 +54,6 @@ const loadNotifyToken = (): string => {
 let notifyToken = loadNotifyToken();
 const pairing = { until: 0 };   // segundos (epoch) até quando a janela de pareamento fica aberta
 // Bateria (LiHV 4,35 V, divisor do GPIO9 com K=2,0; curva LiPo: 3,30 V = 0% .. 4,20 V = 100%). Sem bateria/leitura fora de 3,0-4,6 V: null.
-const BAT_K = 2.0, BAT_CURVE: [number, number][] = [[3.30, 0], [3.50, 5], [3.60, 15], [3.70, 35], [3.80, 55], [3.90, 70], [4.00, 82], [4.10, 92], [4.20, 100]];
 export function batteryInfo(mv: number): { mv: number; volts: number; percent: number } | null {
   const v = mv * BAT_K / 1000; if (!mv || v < 3.0 || v > 4.6) return null;
   let pc = 100; if (v <= BAT_CURVE[0]![0]) pc = 0; else for (let i = 1; i < BAT_CURVE.length; i++) if (v <= BAT_CURVE[i]![0]) { const [v0, p0] = BAT_CURVE[i - 1]!, [v1, p1] = BAT_CURVE[i]!; pc = p0 + (p1 - p0) * (v - v0) / (v1 - v0); break; }
