@@ -24,7 +24,7 @@ export type Button = { label: string; action: Action | null; alt?: Action | null
 /** Um botão como a placa o desenha: retângulo em pixels e índice da placa (linha*colunas + coluna) do canto superior esquerdo. */
 export type Tile = { slot: number; i: number; c: number; r: number; x: number; y: number; w: number; h: number };
 export type Page = { id: number; name: string; buttons: Button[]; apps?: { name: string; bundle: string }[];   // apps: a página aparece quando um deles está em foco
-  parent?: number; autoBack?: boolean };   // parent: é uma SUBPASTA (página oculta, criada por um botão "Subpasta" da página parent); autoBack: depois de uma ação nela, volta à página de origem
+  parent?: number; autoBack?: boolean; tmp?: boolean };   // tmp: página temporária só em memória (histórico de notificações, notify.ts): nunca é gravada   // parent: é uma SUBPASTA (página oculta, criada por um botão "Subpasta" da página parent); autoBack: depois de uma ação nela, volta à página de origem
 export type Config = { rev: number; next_id: number; current: number; pages: Page[]; autoswitch?: boolean; stride?: number };   // stride: colunas da grade virtual (ausente = 4, formato antigo)   // autoswitch: false desliga a troca automática
 
 export const emptyButton = (): Button => ({ label: '', action: null, color: null, image: null, imgrev: 1 });
@@ -96,7 +96,8 @@ export class Store {
 
   save(): void {
     const tmp = this.file.replace(/\.json$/, '') + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(this.cfg, null, 2));
+    const cur = this.getPage(this.cfg.current), out = this.cfg.pages.some((p) => p.tmp) ? { ...this.cfg, pages: this.cfg.pages.filter((p) => !p.tmp), current: cur?.tmp ? (cur.parent !== undefined && this.getPage(cur.parent) ? cur.parent : this.cfg.pages[0]!.id) : this.cfg.current } : this.cfg;
+    fs.writeFileSync(tmp, JSON.stringify(out, null, 2));
     fs.renameSync(tmp, this.file);
     for (const f of this.onSave) { try { f(); } catch (e) { console.error('[onSave]', e); } }
   }
@@ -163,7 +164,7 @@ export class Store {
     for (;;) {
       const used = new Set<number>();
       for (const pg of this.cfg.pages) for (const b of pg.buttons) if (b.action?.type === 'folder' && Number.isInteger(Number(b.action.page))) used.add(Number(b.action.page));
-      const dead = this.cfg.pages.filter((p) => p.parent !== undefined && !used.has(p.id));
+      const dead = this.cfg.pages.filter((p) => p.parent !== undefined && !p.tmp && !used.has(p.id));
       if (!dead.length) return changed;
       for (const pg of dead) {
         for (const bb of pg.buttons) if (bb.image) fs.rmSync(path.join(UPLOADS, bb.image), { force: true });

@@ -58,7 +58,7 @@ export function buildProfile(store: Store): SaProfile | null {
   const tiles: SaTile[] = store.tiles(pg.id).map((t) => {
     const bt = pg.buttons[t.slot]!, tb = store.tileBox(t.c, t.r), f = labelFit(bt, pageName, tb), a = bt.action as Record<string, any> | null;
     const o: SaTile = { i: t.i, x: t.x, y: t.y, w: t.w, h: t.h, bar: tb.bar, label: f.text, fs: f.fs, img: bt.imgrev };
-    if (a?.type === 'widget' && a.kind !== 'nowplaying') o.wd = String(a.kind);   // "Tocando agora" precisa do computador: na placa sozinha o botão fica sem imagem própria
+    if (a?.type === 'widget' && a.kind !== 'nowplaying' && a.kind !== 'notifications') o.wd = String(a.kind);   // "Tocando agora" precisa do computador: na placa sozinha o botão fica sem imagem própria
     else if (a && OFFLINE_TYPES.includes(a.type)) { const ex: Record<string, unknown> = { k: a.type }; for (const k of EX_FIELDS[a.type]!) if (a[k] !== undefined && a[k] !== '' && a[k] !== false) ex[k] = a[k]; o.ex = ex; }
     return o;
   });
@@ -88,5 +88,5 @@ export function offlineReport(store: Store): { slot: number; label: string; ok: 
   const s = getStandalone(), pg = s.page === null ? null : store.getPage(s.page); if (!pg) return [];
   const pageName = (id: number) => store.getPage(id)?.name;
   return store.tiles(pg.id).map((t) => { const bt = pg.buttons[t.slot]!, a = bt.action as Record<string, any> | null, f = labelFit(bt, pageName, store.tileBox(t.c, t.r));
-    return { slot: t.slot, label: f.text.replace(/\n/g, ' ') || (a?.type ?? ''), kind: String(a?.type ?? ''), ok: !!a && ((a.type === 'widget' && a.kind !== 'nowplaying') || OFFLINE_TYPES.includes(a.type)) }; }).filter((x) => x.kind);
+    return { slot: t.slot, label: f.text.replace(/\n/g, ' ') || (a?.type ?? ''), kind: String(a?.type ?? ''), ok: !!a && ((a.type === 'widget' && a.kind !== 'nowplaying' && a.kind !== 'notifications') || OFFLINE_TYPES.includes(a.type)) }; }).filter((x) => x.kind);
 }

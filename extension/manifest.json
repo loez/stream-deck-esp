@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Stream Deck ESP – Notificações",
+  "description": "Envia as notificações dos sites para o servidor local do Stream Deck ESP (botão Notificações da placa).",
+  "version": "1.0.0",
+  "permissions": ["storage"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "background": { "service_worker": "background.js" },
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["content-main.js"], "run_at": "document_start", "world": "MAIN", "all_frames": true },
+    { "matches": ["<all_urls>"], "js": ["content-relay.js"], "run_at": "document_start", "all_frames": true }
+  ]
+}

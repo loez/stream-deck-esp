@@ -10,7 +10,7 @@
     "test:sdk": "node test/sdk.ts",
     "test:deck": "node test/deck-plugins.ts",
     "test:i18n": "node test/i18n.ts",
-    "test": "node test/plugins.ts && node test/sdk.ts && node test/deck-plugins.ts && node test/i18n.ts && node test/focus.ts && node test/settings.ts && node test/env.ts && node test/stride.ts && node test/tiles.ts && node test/anim.ts && node test/platform.ts && node test/usb.ts && node test/plugin-install.ts && node test/slider.ts && node test/netactions.ts && node test/widgets.ts && node test/standalone.ts && node test/backup.ts && node test/nowplaying.ts && node test/state.ts && node test/hold.ts",
+    "test": "node test/plugins.ts && node test/sdk.ts && node test/deck-plugins.ts && node test/i18n.ts && node test/focus.ts && node test/settings.ts && node test/env.ts && node test/stride.ts && node test/tiles.ts && node test/anim.ts && node test/platform.ts && node test/usb.ts && node test/plugin-install.ts && node test/slider.ts && node test/netactions.ts && node test/widgets.ts && node test/notify.ts && node test/standalone.ts && node test/backup.ts && node test/nowplaying.ts && node test/state.ts && node test/hold.ts",
     "test:settings": "node test/settings.ts",
     "test:stride": "node test/stride.ts",
     "test:tiles": "node test/tiles.ts",
@@ -22,13 +22,14 @@
     "test:slider": "node test/slider.ts",
     "test:netactions": "node test/netactions.ts",
     "test:widgets": "node test/widgets.ts",
+    "test:notify": "node test/notify.ts",
     "test:standalone": "node test/standalone.ts",
     "test:backup": "node test/backup.ts",
     "test:nowplaying": "node test/nowplaying.ts",
     "test:state": "node test/state.ts",
     "test:hold": "node test/hold.ts",
     "test:linux-media": "bash test/linux/rodar-docker.sh",
-    "test:ci": "node --env-file=test/darwin.env test/plugins.ts && node test/sdk.ts && node test/deck-plugins.ts && node test/i18n.ts && node --env-file=test/darwin.env test/focus.ts && node --env-file=test/darwin.env test/settings.ts && node --env-file=test/darwin.env test/env.ts && node --env-file=test/darwin.env test/stride.ts && node --env-file=test/darwin.env test/tiles.ts && node --env-file=test/darwin.env test/anim.ts && node test/platform.ts && node test/usb.ts && node test/plugin-install.ts && node test/slider.ts && node test/netactions.ts && node test/widgets.ts && node test/standalone.ts && node test/backup.ts && node test/nowplaying.ts && node test/state.ts && node test/hold.ts"
+    "test:ci": "node --env-file=test/darwin.env test/plugins.ts && node test/sdk.ts && node test/deck-plugins.ts && node test/i18n.ts && node --env-file=test/darwin.env test/focus.ts && node --env-file=test/darwin.env test/settings.ts && node --env-file=test/darwin.env test/env.ts && node --env-file=test/darwin.env test/stride.ts && node --env-file=test/darwin.env test/tiles.ts && node --env-file=test/darwin.env test/anim.ts && node test/platform.ts && node test/usb.ts && node test/plugin-install.ts && node test/slider.ts && node test/netactions.ts && node test/widgets.ts && node test/notify.ts && node test/standalone.ts && node test/backup.ts && node test/nowplaying.ts && node test/state.ts && node test/hold.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.2.0",

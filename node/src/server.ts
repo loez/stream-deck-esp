@@ -19,6 +19,7 @@ import type { SliderAct } from './slider.ts';
 import { startUsbBridge } from './usb-port.ts';
 import { getStandalone, setStandalone } from './standalone.ts';
 import { widgetKey, widgetRefresh, ensureLocation } from './widgets.ts';
+import { pushNotice, listNotices, unreadCount, dismissNotice, clearNotices, setNotifListener } from './notify.ts';
 import { geocode } from './weather.ts';
 import { haEntities } from './netactions.ts';
 import { parseGithubUrl, downloadRepoZip } from './plugin-install.ts';
@@ -44,6 +45,13 @@ function loadToken(): string {
   const t = newToken(); fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true }); fs.writeFileSync(TOKEN_FILE, t, { mode: 0o600 }); fs.chmodSync(TOKEN_FILE, 0o600); return t;
 }
 let token = loadToken();
+/** Token da extensão do Chrome (POST /api/notify): separado do token da placa, e só dá direito a enviar avisos. */
+const NOTIFY_TOKEN_FILE = path.join(path.dirname(TOKEN_FILE), 'notify-key');
+const loadNotifyToken = (): string => {
+  try { const t = fs.readFileSync(NOTIFY_TOKEN_FILE, 'utf8').trim(); if (t.length >= 20) return t; } catch { /* gera abaixo */ }
+  const t = newToken(); fs.mkdirSync(path.dirname(NOTIFY_TOKEN_FILE), { recursive: true }); fs.writeFileSync(NOTIFY_TOKEN_FILE, t, { mode: 0o600 }); fs.chmodSync(NOTIFY_TOKEN_FILE, 0o600); return t;
+};
+let notifyToken = loadNotifyToken();
 const pairing = { until: 0 };   // segundos (epoch) até quando a janela de pareamento fica aberta
 // Bateria (LiHV 4,35 V, divisor do GPIO9 com K=2,0; curva LiPo: 3,30 V = 0% .. 4,20 V = 100%). Sem bateria/leitura fora de 3,0-4,6 V: null.
 const BAT_K = 2.0, BAT_CURVE: [number, number][] = [[3.30, 0], [3.50, 5], [3.60, 15], [3.70, 35], [3.80, 55], [3.90, 70], [4.00, 82], [4.10, 92], [4.20, 100]];
@@ -116,7 +124,7 @@ export function createServer(store: Store, host: PluginHost | null = null, focus
   /** Versão do ícone/texto de cada botão de plugin ("pagina:slot" -> versão): a página de configuração recarrega só a prévia do botão que mudou. */
   const pluginVers = (): Record<string, number> => {
     const o: Record<string, number> = {};
-    for (const pg of store.cfg.pages) pg.buttons.forEach((b, slot) => { if (b.action?.type === 'plugin') o[`${pg.id}:${slot}`] = hooks.pluginVersion?.(b) ?? 0; else if (b.action?.type === 'resources' || b.action?.type === 'widget') o[`${pg.id}:${slot}`] = resVer.get(`${pg.id}:${slot}`) ?? 0; else if (b.action?.type === 'slider') o[`${pg.id}:${slot}`] = sliderVer.get(`${pg.id}:${slot}`) ?? 0; });
+    for (const pg of store.cfg.pages) pg.buttons.forEach((b, slot) => { if (b.action?.type === 'plugin') o[`${pg.id}:${slot}`] = hooks.pluginVersion?.(b) ?? 0; else if (b.action?.type === 'resources' || b.action?.type === 'widget' || b.action?.type === 'notif') o[`${pg.id}:${slot}`] = resVer.get(`${pg.id}:${slot}`) ?? 0; else if (b.action?.type === 'slider') o[`${pg.id}:${slot}`] = sliderVer.get(`${pg.id}:${slot}`) ?? 0; });
     return o;
   };
   /** Monitor de Recursos: enquanto existir algum botão desse tipo, lê o sistema a cada 2 s e, quando o valor que um botão mostra muda, sobe a versão dele (a placa e a prévia redesenham). */
@@ -153,6 +161,16 @@ export function createServer(store: Store, host: PluginHost | null = null, focus
     if (changed) store.cfg.rev++;
   };
   if (!process.env.DECK_NORES) { setInterval(() => { void widgetTick(); }, 15_000).unref(); setTimeout(() => { void widgetTick(); }, 1500).unref(); setInterval(() => { void widgetTick(true); }, 3000).unref(); }
+  /** Notificações do navegador (notify.ts): a cada novidade, o botão "Notificações" e a página de histórico (se for a atual) redesenham na hora. */
+  setNotifListener(() => {
+    let changed = false;
+    for (const pg of store.cfg.pages) pg.buttons.forEach((b, slot) => {
+      if (!(b.action?.type === 'notif' || (b.action?.type === 'widget' && b.action.kind === 'notifications'))) return;
+      const k = `${pg.id}:${slot}`; resVer.set(k, (resVer.get(k) ?? 0) + 1);
+      if (pg.id === store.cfg.current) { store.viewRev[slot]!++; changed = true; }
+    });
+    if (changed) store.cfg.rev++;
+  });
   /** Botões com estado (luz do Home Assistant, mudo): a cada 4 s relê o estado dos botões da página atual e, se mudou, redesenha só esses botões. Também roda ~1 s depois de qualquer toque. */
   const stateTick = async () => {
     const pg = store.getPage(store.cfg.current); if (!pg) return;
@@ -281,8 +299,10 @@ export function createServer(store: Store, host: PluginHost | null = null, focus
         if (p === '/api/status') {
           const ago = board.ts ? now() - board.ts : null;
           return send(res, 200, { board_ip: board.ip, ago, connected: ago !== null && ago < 8, press: board.press, ips: lanIps(), port: PORT, battery: batteryInfo(board.batMv), display: { ...display }, current: store.cfg.current, rev: store.cfg.rev, pv: pluginVers(), ...(focus ? focus.status() : { front: null, enabled: false, on: false }),
-            pairing: Math.max(0, Math.trunc(pairing.until - now())), unpaired_ip: now() - (board.unpaired_ts ?? 0) < 10 ? (board.unpaired_ip ?? null) : null });
+            notif: { unread: unreadCount() }, pairing: Math.max(0, Math.trunc(pairing.until - now())), unpaired_ip: now() - (board.unpaired_ts ?? 0) < 10 ? (board.unpaired_ip ?? null) : null });
         }
+        if (p === '/api/notifications') { if (!localOnly(req, res)) return; return send(res, 200, { unread: unreadCount(), items: listNotices() }); }   // lista para o painel da página
+        if (p === '/api/notify/token') { if (!localOnly(req, res)) return; return send(res, 200, { token: notifyToken, port: PORT }); }   // mostrado na página para colar nas opções da extensão
         if (p === '/api/backup') {   // exporta a configuração (botões, páginas, imagens, grade) num arquivo; ?secrets=1 inclui tokens e senhas
           const body = Buffer.from(JSON.stringify(exportBackup(store, url.searchParams.get('secrets') === '1'))), stamp = new Date().toISOString().slice(0, 10);
           res.writeHead(200, { 'Content-Type': 'application/json', 'Content-Length': body.length, 'Content-Disposition': `attachment; filename="stream-deck-esp-backup-${stamp}.json"`, 'Cache-Control': 'no-store', Connection: 'close' }); return res.end(body);
@@ -339,7 +359,19 @@ export function createServer(store: Store, host: PluginHost | null = null, focus
           console.log(`[botao ${bi}] ${ok ? 'ok' : 'ERRO'} ${!ok ? msg : ''}`);
           return send(res, ok ? 200 : 500, { ok, msg, quiet: quiet && ok, toast: toastFor(store, pid, i, ok, msg) });   // quiet: navegação, a placa não mostra aviso
         }
+        if (p === '/api/notify') {   // extensão do Chrome (extension/): token próprio no X-Deck-Notify; só aceita pedidos do próprio computador
+          const host = (req.headers.host || '').split(':')[0]!;
+          if (!['127.0.0.1', '::1'].includes(remote(req)) || !['localhost', '127.0.0.1', '[::1]'].includes(host)) return send(res, 403, { erro: 'somente localhost' });
+          if (!safeEq(String(req.headers['x-deck-notify'] || ''), notifyToken)) return send(res, 401, { erro: 'token inválido' });
+          if (!needType(req, res, /^application\/json/i)) return;
+          let d: any; try { d = await readJson(req, 8192); } catch { return send(res, 400, { erro: 'pedido inválido' }); }
+          const n = pushNotice({ source: d?.source, title: d?.title, body: d?.body, tag: d?.tag });
+          return send(res, n ? 200 : 429, n ? { ok: true, id: n.id } : { erro: 'aviso vazio ou limite por minuto' });
+        }
         if (!localOnly(req, res)) return;
+        if (p === '/api/notifications/clear') { clearNotices(); return send(res, 200, { ok: true }); }
+        if (p === '/api/notifications/dismiss') { let d: any; try { d = await readJson(req, 200); } catch { return send(res, 400, { erro: 'pedido inválido' }); } return send(res, dismissNotice(Number(d?.id)) ? 200 : 404, { ok: true }); }
+        if (p === '/api/notify/token/reset') { notifyToken = newToken(); fs.writeFileSync(NOTIFY_TOKEN_FILE, notifyToken, { mode: 0o600 }); fs.chmodSync(NOTIFY_TOKEN_FILE, 0o600); return send(res, 200, { token: notifyToken }); }
         if (p.startsWith('/api/merge/') || p.startsWith('/api/unmerge/')) {   // juntar c x r células num só botão / separar
           const mg = /^\/api\/merge\/(\d+)$/.exec(p), um = /^\/api\/unmerge\/(\d+)\/(\d+)$/.exec(p), pid = Number((mg ?? um)?.[1] ?? -1), pgm = store.getPage(pid);
           if ((!mg && !um) || !pgm) return send(res, 400, { erro: 'pedido inválido' });

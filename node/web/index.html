@@ -182,11 +182,12 @@
 <div class="modal-back" id="settings" hidden>
   <div class="modal" role="dialog" aria-label="Configurações">
     <div class="modal-head"><span data-i18n>Configurações</span><button class="iconbtn" id="set_close" title="Fechar"><span id="set_closeic"></span></button></div>
-    <div class="tabs2"><button class="tab2 on" data-tab="board" data-i18n>Placa e tela</button><button class="tab2" data-tab="auto" data-i18n>Modo autônomo</button><button class="tab2" data-tab="plugins" data-i18n>Plugins de Terceiros</button><button class="tab2" data-tab="backup" data-i18n>Backup</button></div>
+    <div class="tabs2"><button class="tab2 on" data-tab="board" data-i18n>Placa e tela</button><button class="tab2" data-tab="auto" data-i18n>Modo autônomo</button><button class="tab2" data-tab="plugins" data-i18n>Plugins de Terceiros</button><button class="tab2" data-tab="notif" data-i18n>Notificações</button><button class="tab2" data-tab="backup" data-i18n>Backup</button></div>
     <div class="modal-body">
       <div id="set_board"><div class="gridbar" id="gridbar"></div></div>
       <div id="set_auto" hidden></div>
       <div id="set_plugins" hidden></div>
+      <div id="set_notif" hidden></div>
       <div id="set_backup" hidden></div>
     </div>
   </div>
@@ -245,7 +246,7 @@ function derive(a) {   // nome padrão (igual ao do servidor, só para o rótulo
     case 'webhook': return 'Webhook';
     case 'homeassistant': return 'Home Assistant';
     case 'mqtt': return 'MQTT';
-    case 'widget': return t(a.kind === 'weather' ? 'Clima' : a.kind === 'nowplaying' ? 'Tocando agora' : 'Relógio');
+    case 'widget': return t(a.kind === 'weather' ? 'Clima' : a.kind === 'nowplaying' ? 'Tocando agora' : a.kind === 'notifications' ? 'Notificações' : 'Relógio');
     case 'slider': return t(({ volume: 'Volume', appvolume: 'Volume do app', brightness: 'Brilho', scrub: 'Linha do tempo' })[a.mode] || 'Controle');
     case 'resources': return a.res === 'cpu' || a.res === 'gpu' || a.res === 'ram' ? a.res.toUpperCase() : t('Recursos');
     case 'media': return t(MEDIA[a.key] || 'Mídia');
@@ -539,7 +540,7 @@ const LIB = [
   { name: 'Monitor de Recursos', ic: IC.res, items: Object.entries(RES).map(([k, v]) => ({ name: v, ic: IC.res, act: () => ({ type: 'resources', res: k }), ready: true })).concat([{ name: 'Resumo em linha (botão largo)', ic: IC.res, act: () => ({ type: 'resources', res: 'all', layout: 'line' }), ready: true }]) },
   { name: 'Casa inteligente', ic: IC.home, items: [
     { name: 'Webhook', ic: IC.home, act: () => DEFAULTS.webhook() }, { name: 'Home Assistant', ic: IC.home, act: () => DEFAULTS.homeassistant() }, { name: 'MQTT (publicar)', ic: IC.home, act: () => DEFAULTS.mqtt() },
-    { name: 'Relógio', ic: IC.home, act: () => ({ type: 'widget', kind: 'clock' }), ready: true }, { name: 'Clima', ic: IC.home, act: () => ({ type: 'widget', kind: 'weather' }), ready: true }, { name: 'Tocando agora', ic: IC.media, act: () => ({ type: 'widget', kind: 'nowplaying' }), ready: true } ] },
+    { name: 'Relógio', ic: IC.home, act: () => ({ type: 'widget', kind: 'clock' }), ready: true }, { name: 'Clima', ic: IC.home, act: () => ({ type: 'widget', kind: 'weather' }), ready: true }, { name: 'Tocando agora', ic: IC.media, act: () => ({ type: 'widget', kind: 'nowplaying' }), ready: true }, { name: 'Notificações', ic: IC.home, act: () => ({ type: 'widget', kind: 'notifications' }), ready: true } ] },
   { name: 'Controle deslizante', ic: IC.slider, items: [
     { name: 'Volume do sistema', ic: IC.slider, act: () => ({ type: 'slider', mode: 'volume' }), ready: true }, { name: 'Volume do Spotify', ic: IC.slider, act: () => ({ type: 'slider', mode: 'appvolume', app: 'spotify' }), ready: true },
     { name: 'Volume do Apple Music', ic: IC.slider, act: () => ({ type: 'slider', mode: 'appvolume', app: 'music' }), ready: true }, { name: 'Brilho da tela', ic: IC.slider, act: () => ({ type: 'slider', mode: 'brightness', sens: 24 }), ready: true },
@@ -652,7 +653,7 @@ function fields(a, path) {
         <label>${t('Mensagem')}</label><input type="text" ${f('payload')} value="${esc(a.payload || '')}" placeholder="ON">
         <label class="chk"><input type="checkbox" ${f('retain')} ${a.retain ? 'checked' : ''}> ${t('retain (o broker guarda a última mensagem)')}</label>
         <div class="note">${t('Publica a mensagem no tópico (MQTT 3.1.1, QoS 0). Não há resposta de volta nesta versão.')}</div>`;
-    case 'widget': return `<label>${t('Mostrar')}</label><select ${f('kind')} data-rr>${opts({ clock: 'Relógio', weather: 'Clima', nowplaying: 'Tocando agora' }, a.kind || 'clock')}</select>
+    case 'widget': return `<label>${t('Mostrar')}</label><select ${f('kind')} data-rr>${opts({ clock: 'Relógio', weather: 'Clima', nowplaying: 'Tocando agora', notifications: 'Notificações' }, a.kind || 'clock')}</select>
         <div id="wd_box" class="note">${t('Carregando…')}</div>`;
     case 'slider': {
       const m = a.mode || 'volume', rel = m === 'brightness' || m === 'scrub';
@@ -787,6 +788,7 @@ function bindHome() {
     $('ha_ents').innerHTML = r.map(e => `<option value="${esc(e.id)}">${esc(e.name)}</option>`).join(''); m.textContent = plural(r.length, '1 entidade', '{n} entidades');
   };
   const box = $('wd_box'); if (!box) return;
+  if (draft.action.kind === 'notifications') { box.innerHTML = t('Mostra o último aviso do navegador (extensão do Chrome) e quantos não foram lidos. Tocar abre o histórico, com rolagem; tocar num aviso o dispensa. Precisa do computador ligado (não funciona no modo autônomo). Configure em Configurações > Notificações.'); return; }
   if (draft.action.kind === 'nowplaying') { box.innerHTML = t('Mostra a capa, o título e o artista do que toca (Spotify/Music no Mac, qualquer player no Linux e no Windows). Tocar no botão pausa/retoma. Precisa do computador ligado (não funciona no modo autônomo).'); return; }
   (async () => {
     const s = await api('/api/standalone'), w = s.weather, isW = draft.action.kind === 'weather';
@@ -894,10 +896,23 @@ function openSettings(tab) { $('settings').hidden = false; setTab(tab || 'board'
 function closeSettings() { $('settings').hidden = true; }
 function setTab(t) {
   document.querySelectorAll('.tab2').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
-  $('set_board').hidden = t !== 'board'; $('set_auto').hidden = t !== 'auto'; $('set_plugins').hidden = t !== 'plugins'; $('set_backup').hidden = t !== 'backup';
+  $('set_board').hidden = t !== 'board'; $('set_auto').hidden = t !== 'auto'; $('set_plugins').hidden = t !== 'plugins'; $('set_backup').hidden = t !== 'backup'; $('set_notif').hidden = t !== 'notif';
+  if (t === 'notif') drawNotifPane();
   if (t === 'plugins') drawPluginsPane();
   if (t === 'backup') drawBackupPane();
   if (t === 'auto') drawAutoPane();
+}
+// ---------- Notificações do navegador: token da extensão do Chrome e lista dos avisos recebidos
+async function drawNotifPane() {
+  const box = $('set_notif'), [tk, nl] = await Promise.all([api('/api/notify/token'), api('/api/notifications')]);
+  const rows = nl.items.length ? nl.items.map(n => `<div class="saitem"><i class="${n.read ? '' : 'ok'}"></i><b>${esc(n.source || t('Navegador'))}</b> ${esc(n.title)} <small>${esc(n.body)}</small> <button type="button" data-nd="${n.id}">×</button></div>`).join('') : `<div class="note">${t('Nenhum aviso recebido.')}</div>`;
+  box.innerHTML = `<h3>${t('Extensão do Chrome')}</h3><div class="note">${t('Instale a extensão da pasta extension/ do projeto (chrome://extensions, Modo do desenvolvedor, Carregar sem compactação) e cole nas opções dela a porta e a chave abaixo. Os avisos dos sites aparecem no botão Notificações da placa.')}</div>
+    <label>${t('Porta')}</label><input readonly value="${tk.port}"><label>${t('Chave da extensão')}</label><input readonly id="nt_tok" value="${esc(tk.token)}">
+    <div class="row" style="margin:10px 0"><button id="nt_reset" type="button">${t('Gerar nova chave')}</button><button id="nt_clear" type="button">${t('Limpar avisos')}</button></div>
+    <h3>${t('Avisos recebidos')}</h3>${rows}`;
+  $('nt_reset').onclick = async () => { await api('/api/notify/token/reset', j('POST', {})); drawNotifPane(); };
+  $('nt_clear').onclick = async () => { await api('/api/notifications/clear', j('POST', {})); drawNotifPane(); };
+  box.querySelectorAll('[data-nd]').forEach(b => b.onclick = async () => { await api('/api/notifications/dismiss', j('POST', { id: Number(b.dataset.nd) })); drawNotifPane(); });
 }
 // ---------- Backup: exporta/importa botões, páginas, imagens e a grade num único arquivo
 function drawBackupPane() {

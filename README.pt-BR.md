@@ -51,7 +51,7 @@ O CI (GitHub Actions) roda os testes do servidor em macOS/Windows/Linux, um test
 Detalhes e um roteiro de teste manual para o Windows: [docs/PLATAFORMAS.md](docs/PLATAFORMAS.md).
 
 ## Documentação
-[Instalar](docs/INSTALAR.md) · [Plataformas](docs/PLATAFORMAS.md) · [Modo autônomo](docs/MODO-AUTONOMO.md) · [Protocolo USB](docs/PROTOCOLO-USB.md) · [Controles deslizantes](docs/CONTROLES-DESLIZANTES.md) · [Criar plugin](docs/CRIAR-PLUGIN.md) · [Protocolo de plugins](docs/PROTOCOLO-PLUGIN.md) · [Traduções](docs/TRADUCAO.md) · [Gravar o firmware](docs/FIRMWARE.md) · [Adaptar a outra placa](docs/ADAPTAR-PLACA.md) · [Notas de hardware](docs/hardware/)
+[Instalar](docs/INSTALAR.md) · [Plataformas](docs/PLATAFORMAS.md) · [Notificações do navegador](docs/NOTIFICACOES.md) · [Modo autônomo](docs/MODO-AUTONOMO.md) · [Protocolo USB](docs/PROTOCOLO-USB.md) · [Controles deslizantes](docs/CONTROLES-DESLIZANTES.md) · [Criar plugin](docs/CRIAR-PLUGIN.md) · [Protocolo de plugins](docs/PROTOCOLO-PLUGIN.md) · [Traduções](docs/TRADUCAO.md) · [Gravar o firmware](docs/FIRMWARE.md) · [Adaptar a outra placa](docs/ADAPTAR-PLACA.md) · [Notas de hardware](docs/hardware/)
 
 ## Segurança
 O servidor escuta em todas as interfaces para a placa alcançá-lo, mas a página de configuração aceita **só localhost**; a placa se autentica com um token obtido numa janela de pareamento de 90 s. Não exponha a porta 8765 fora da sua rede local. **Plugins executam código com as permissões do seu usuário**: instale só os de confiança. O modo autônomo guarda segredos de webhook/Home Assistant/MQTT em claro na flash da placa; nunca publique um dump da flash. Veja [SECURITY.md](SECURITY.md).

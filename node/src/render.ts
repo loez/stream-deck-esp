@@ -1,6 +1,7 @@
 // Imagem do botão (73x84): imagem própria (recortada) ou símbolo/ícone de app sobre um degradê. O nome é desenhado pela placa (faixa de 32 px no rodapé).
 // Equivalente ao render() do servidor Python, com o canvas do Skia no lugar do Pillow. Texto: paridade exata; imagens: paridade perceptual (ver test/parity.ts).
 import { lastResources, resVer } from './resources.ts';
+import { notifCanvas } from './notify.ts';
 import { isAbsolute, levelOf, sliderAxis, sliderColor } from './slider.ts';
 import { widgetCanvas } from './widgets.ts';
 import { stateOf, stateTag } from './state.ts';
@@ -280,6 +281,7 @@ async function renderButtonBase(store: Store, pid: number, i: number, useSpan = 
     return out;
   }
   if (act.type === 'widget') return widgetCanvas(String(act.kind), W, H);
+  if (act.type === 'notif') return notifCanvas(act, W, H, store);
   if (act.type === 'slider') return sliderCanvas(act, W, H, sp.c, sp.r, withLevel ? levelOf(`${pid}:${i}`) : null);
   if (act.type === 'resources') return resourcesCanvas(String(act.res ?? 'all'), W, H, String(act.layout ?? 'auto'));
   const appFor = act.type === 'plugin' ? null : await iconAppPath(act, store);   // ícone do app ligado à ação (o próprio, o da sequência ou o da página de destino)
@@ -333,7 +335,7 @@ function iconDeps(act: Action | null | undefined, store: Store, depth = 0): stri
   return '';
 }
 export async function renderRaw(store: Store, pid: number, i: number, useSpan = true): Promise<Buffer> {
-  const bt = store.getButton(pid, i)!, sp = useSpan ? store.spanOf(pid, i) : { c: 1, r: 1 }, g = store.tileBox(sp.c, sp.r), key = `${pid}:${i}:${bt.imgrev}:${hooks.pluginVersion?.(bt) ?? 0}:${bt.action?.type === 'resources' || bt.action?.type === 'widget' ? resVer.get(`${pid}:${i}`) ?? 0 : ''}:${g.w}x${g.h}x${g.bar}:${iconDeps(bt.action, store)}:${stateTag(bt.action)}`, hit = rawCache.get(key);
+  const bt = store.getButton(pid, i)!, sp = useSpan ? store.spanOf(pid, i) : { c: 1, r: 1 }, g = store.tileBox(sp.c, sp.r), key = `${pid}:${i}:${bt.imgrev}:${hooks.pluginVersion?.(bt) ?? 0}:${bt.action?.type === 'resources' || bt.action?.type === 'widget' || bt.action?.type === 'notif' ? resVer.get(`${pid}:${i}`) ?? 0 : ''}:${g.w}x${g.h}x${g.bar}:${iconDeps(bt.action, store)}:${stateTag(bt.action)}`, hit = rawCache.get(key);
   if (hit) return hit;
   const buf = toRgb565(await renderButton(store, pid, i, useSpan));
   for (const k of [...rawCache.keys()]) if (k.startsWith(`${pid}:${i}:`)) rawCache.delete(k);

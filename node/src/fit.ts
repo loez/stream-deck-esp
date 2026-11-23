@@ -141,7 +141,7 @@ export function effectiveLabel(b: Button, pageName: (id: number) => string | und
   if (t === 'webhook') return tr('Webhook');
   if (t === 'homeassistant') return tr('Home Assistant');
   if (t === 'mqtt') return 'MQTT';
-  if (t === 'widget') return tr(a.kind === 'weather' ? 'Clima' : a.kind === 'nowplaying' ? 'Tocando agora' : 'Relógio');
+  if (t === 'widget') return tr(a.kind === 'weather' ? 'Clima' : a.kind === 'nowplaying' ? 'Tocando agora' : a.kind === 'notifications' ? 'Notificações' : 'Relógio');
   if (t === 'slider') return tr(({ volume: 'Volume', appvolume: 'Volume do app', brightness: 'Brilho', scrub: 'Linha do tempo' } as Record<string, string>)[String(a.mode)] ?? 'Controle');
   if (t === 'resources') return a.res === 'cpu' || a.res === 'gpu' || a.res === 'ram' ? String(a.res).toUpperCase() : tr('Recursos');
   if (t === 'multi') return tr(MULTI_NAMES[(a.mode as string) ?? 'seq'] ?? 'Sequência');

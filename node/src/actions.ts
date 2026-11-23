@@ -9,6 +9,7 @@ import { RES_KINDS, readResources } from './resources.ts';
 import { SLIDER_MODES, SLIDER_APPS } from './slider.ts';
 import { cleanNet, runWebhook, runHomeAssistant, runMqtt } from './netactions.ts';
 import { WIDGET_KINDS, widgetRefresh } from './widgets.ts';
+import { notifPress, openHistory } from './notify.ts';
 import { pyBool, pyInt, pyStr, slice, sleep, strip } from './util.ts';
 
 export type Result = [boolean, string];
@@ -130,10 +131,13 @@ export const ACTIONS: Record<string, ActionFn> = {
   async homeassistant(a) { return runHomeAssistant(a); },
   async mqtt(a) { return runMqtt(a); },
   /** Relógio / Clima: botões que só mostram informação (desenhados em widgets.ts); tocar atualiza o clima na hora. */
-  async widget(a) {
+  async widget(a, ctx) {
+    if (a.kind === 'notifications') { openHistory(ctx.store); return [true, 'ok']; }   // abre o histórico (página temporária com rolagem)
     if (a.kind === 'nowplaying') { const r = await platform.media('playpause'); setTimeout(() => { void widgetRefresh('nowplaying'); }, 700); return r; }   // tocar no "Tocando agora" = play/pausa
     await widgetRefresh(String(a.kind), true); return [true, 'ok'];
   },
+  /** Botões da página de histórico de notificações (notify.ts): rolar, limpar, dispensar. */
+  async notif(a, ctx) { return notifPress(ctx.store, a); },
   /** Controle deslizante: o botão é arrastado na placa (POST /api/slide); tocar por outro caminho (teste na página) só avisa como usar. */
   async slider() { return [true, 'arraste o dedo no botão (na placa)']; },
   /** Navegação: próxima/anterior (em ciclo), início (1ª página), voltar (histórico) ou ir para uma página (pasta). */

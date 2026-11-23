@@ -5,9 +5,10 @@ import type { Canvas } from '@napi-rs/canvas';
 import { getLang, tr } from './i18n.ts';
 import { getStandalone, setStandalone, tzOf } from './standalone.ts';
 import { lastArt, lastNowPlaying, nowPlayingKey, nowPlayingRefresh } from './nowplaying.ts';
+import { notifKey, notifWidgetCanvas } from './notify.ts';
 import { fetchWeather, lastWeather, locateByIp, weatherIcon, wmoInfo } from './weather.ts';
 
-export const WIDGET_KINDS = ['clock', 'weather', 'nowplaying'] as const;
+export const WIDGET_KINDS = ['clock', 'weather', 'nowplaying', 'notifications'] as const;
 
 export function clockParts(now = new Date(), s = getStandalone()): { hm: string; date: string; secs: string } {
   const tz = tzOf(s), loc = getLang() === 'en' ? 'en-US' : 'pt-BR';
@@ -21,6 +22,7 @@ export function clockParts(now = new Date(), s = getStandalone()): { hm: string;
 export function widgetKey(kind: string): string {
   if (kind === 'clock') return clockParts().hm;
   if (kind === 'nowplaying') return nowPlayingKey();
+  if (kind === 'notifications') return notifKey();
   const w = lastWeather(); return w ? `${w.temp}|${w.code}|${w.isDay}` : '-';
 }
 /** Sem cidade escolhida: descobre a cidade aproximada pelo IP (uma tentativa a cada 10 min enquanto falhar; para de vez quando o usuário escolhe/apaga a cidade ou há cidade). Devolve true se definiu. */
@@ -55,6 +57,7 @@ export function widgetCanvas(kind: string, W: number, H: number): Canvas {
     o.fillStyle = '#9ca3af'; o.font = font(Math.max(8, Math.min(big * 0.34, W * 0.13))); o.fillText(date, W / 2, H * 0.43 + big * 0.78);
     return cv;
   }
+  if (kind === 'notifications') return notifWidgetCanvas(W, H);
   if (kind === 'nowplaying') {
     const np = lastNowPlaying(), art = lastArt();
     if (!np) { const px = Math.min(W * 0.16, H * 0.15); o.fillStyle = '#9ca3af'; o.font = font(px); const ls = tr('nada tocando').split(' '); ls.forEach((ln, k) => o.fillText(ln, W / 2, H / 2 + (k - (ls.length - 1) / 2) * px * 1.25, W - 6)); return cv; }
